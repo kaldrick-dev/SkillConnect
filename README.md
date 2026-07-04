@@ -21,3 +21,4 @@ Each has its own README with setup instructions.
 - David Irihose — Backend Engineer
 - Kizito Imena — Database Engineer
 - Ganza Gavin — Documentation Lead
+- Butera Irebe Asnath - UI/UX
