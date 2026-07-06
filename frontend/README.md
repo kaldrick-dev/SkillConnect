@@ -1,42 +1,16 @@
-# SkillConnect Frontend (React)
+# React + Vite
 
-Client for the Virtual Internship Platform. Provides the UI for students,
-mentors, employers, and admins to log in, browse/apply to internships, manage
-tasks and submissions, track progress, and view certificates.
+This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
-Not scaffolded yet. Suggested setup:
+Currently, two official plugins are available:
 
-```bash
-cd frontend
-npm create vite@latest . -- --template react   # or: npx create-react-app .
-npm install
-npm install axios react-router-dom
-```
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## Suggested structure
+## React Compiler
 
-```
-frontend/
-├── public/
-├── src/
-│   ├── assets/
-│   ├── components/       # Reusable UI components (shared across pages)
-│   ├── pages/
-│   │   ├── auth/         # Login, register
-│   │   ├── student/      # Browse/apply internships, tasks, submissions, certificates
-│   │   ├── mentor/       # Review performance, assigned students
-│   │   ├── employer/     # Post internships, manage applicants
-│   │   └── admin/        # User management, platform stats
-│   ├── context/          # e.g. AuthContext for the logged-in user/JWT
-│   ├── services/         # API client (axios instance pointed at the Flask backend)
-│   ├── routes/           # App route definitions, role-protected routes
-│   ├── App.jsx
-│   └── main.jsx
-├── .env.example           # e.g. VITE_API_URL=http://localhost:5000/api
-└── package.json
-```
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-## Backend
+## Expanding the Oxlint configuration
 
-The frontend talks to the Flask API in [`../backend`](../backend), served by
-default at `http://localhost:5000/api`.
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
