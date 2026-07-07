@@ -1,2 +1,21 @@
-# SQLAlchemy models go here (User, Student, Mentor, Employer, Internship,
-# Task, Submission, Certificate) — see the ERD in the project proposal, Ch. 3.4.
+from .entities import (
+    Certificate,
+    Employer,
+    Internship,
+    Mentor,
+    Student,
+    Submission,
+    Task,
+    User,
+)
+
+__all__ = [
+    "Certificate",
+    "Employer",
+    "Internship",
+    "Mentor",
+    "Student",
+    "Submission",
+    "Task",
+    "User",
+]
