@@ -35,5 +35,23 @@ def register():
 
 @auth_bp.post("/login")
 def login():
-    # TODO: next commit
-    return jsonify({"message": "not implemented"}), 501
+   data = request.get_json()
+
+   if not data or not all(k in data for k in ("email", "password")):
+        return jsonify({"error": "email and password are required"}), 400
+
+   user = User.query.filter_by(email=data["email"]).first()
+
+   if not user or not user.check_password(data["password"]):
+        return jsonify({"error": "invalid email or password"}), 401
+
+   access_token = create_access_token(
+        identity=str(user.id),
+        additional_claims={"role": user.role}
+    )
+
+   return jsonify({
+        "message": "login successful",
+        "access_token": access_token,
+        "user": user.to_dict()
+    }), 200
