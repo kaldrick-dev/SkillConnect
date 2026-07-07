@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from app.extensions import db
-from app.models.task import Task
+from app.models import Task
 
 tasks_bp = Blueprint("tasks", __name__)
 

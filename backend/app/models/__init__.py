@@ -1,3 +1,10 @@
-from app.models.user import User
-from app.models.internship import Internship
-from app.models.task import Task
+from .entities import (
+    User,
+    Student,
+    Mentor,
+    Employer,
+    Internship,
+    Task,
+    Submission,
+    Certificate,
+)
