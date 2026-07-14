@@ -1,20 +1,7 @@
 """SQLAlchemy entities for SkillConnect."""
 
 from app.extensions import db
-
-
-class User(db.Model):
-    __tablename__ = "USER"
-
-    userId = db.Column(db.BigInteger, primary_key=True, autoincrement=True, nullable=False)
-    fullName = db.Column(db.String(255), nullable=False)
-    email = db.Column(db.String(255), nullable=False, unique=True)
-    password = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.String(50), nullable=False)
-
-    student = db.relationship("Student", backref="user", uselist=False, cascade="all, delete-orphan")
-    mentor = db.relationship("Mentor", backref="user", uselist=False, cascade="all, delete-orphan")
-    employer = db.relationship("Employer", backref="user", uselist=False, cascade="all, delete-orphan")
+from .user import User
 
 
 class Student(db.Model):

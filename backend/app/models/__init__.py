@@ -6,8 +6,8 @@ from .entities import (
     Student,
     Submission,
     Task,
-    User,
 )
+from .user import User
 
 __all__ = [
     "Certificate",
