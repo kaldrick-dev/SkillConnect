@@ -1,9 +1,9 @@
+from .student import Student
+from .employer import Employer
 from .entities import (
     Certificate,
-    Employer,
     Internship,
     Mentor,
-    Student,
     Submission,
     Task,
 )

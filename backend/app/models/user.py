@@ -17,8 +17,8 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, nullable=False, server_default=db.func.now(), onupdate=db.func.now())
 
-    student = db.relationship("Student", backref="user", uselist=False, cascade="all, delete-orphan")
-    employer = db.relationship("Employer", backref="user", uselist=False, cascade="all, delete-orphan")
+    student = db.relationship("Student", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    employer = db.relationship("Employer", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
     def set_password(self, raw: str) -> None:
         self.password_hash = generate_password_hash(raw)

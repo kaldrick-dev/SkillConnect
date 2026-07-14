@@ -1,24 +1,6 @@
 """SQLAlchemy entities for SkillConnect."""
 
 from app.extensions import db
-from .user import User
-
-
-class Student(db.Model):
-    __tablename__ = "STUDENT"
-
-    studentId = db.Column(db.BigInteger, primary_key=True, autoincrement=True, nullable=False)
-    userId = db.Column(
-        db.BigInteger,
-        db.ForeignKey("USER.userId", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=False,
-        unique=True,
-    )
-    institution = db.Column(db.String(255), nullable=False)
-    skills = db.Column(db.Text(), nullable=True)
-
-    internships = db.relationship("Internship", backref="student", cascade="all, delete-orphan")
-    submissions = db.relationship("Submission", backref="student", cascade="all, delete-orphan")
 
 
 class Mentor(db.Model):
@@ -27,7 +9,7 @@ class Mentor(db.Model):
     mentorId = db.Column(db.BigInteger, primary_key=True, autoincrement=True, nullable=False)
     userId = db.Column(
         db.BigInteger,
-        db.ForeignKey("USER.userId", ondelete="CASCADE", onupdate="CASCADE"),
+        db.ForeignKey("users.id", ondelete="CASCADE", onupdate="CASCADE"),
         nullable=False,
         unique=True,
     )
@@ -36,28 +18,13 @@ class Mentor(db.Model):
     internships = db.relationship("Internship", backref="mentor", cascade="all, delete-orphan")
 
 
-class Employer(db.Model):
-    __tablename__ = "EMPLOYER"
-
-    employerId = db.Column(db.BigInteger, primary_key=True, autoincrement=True, nullable=False)
-    userId = db.Column(
-        db.BigInteger,
-        db.ForeignKey("USER.userId", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=False,
-        unique=True,
-    )
-    companyName = db.Column(db.String(255), nullable=False)
-
-    internships = db.relationship("Internship", backref="employer", cascade="all, delete-orphan")
-
-
 class Internship(db.Model):
     __tablename__ = "INTERNSHIP"
 
     internshipId = db.Column(db.BigInteger, primary_key=True, autoincrement=True, nullable=False)
     studentId = db.Column(
         db.BigInteger,
-        db.ForeignKey("STUDENT.studentId", ondelete="CASCADE", onupdate="CASCADE"),
+        db.ForeignKey("students.id", ondelete="CASCADE", onupdate="CASCADE"),
         nullable=False,
     )
     mentorId = db.Column(
@@ -67,7 +34,7 @@ class Internship(db.Model):
     )
     employerId = db.Column(
         db.BigInteger,
-        db.ForeignKey("EMPLOYER.employerId", ondelete="CASCADE", onupdate="CASCADE"),
+        db.ForeignKey("employers.id", ondelete="CASCADE", onupdate="CASCADE"),
         nullable=False,
     )
     title = db.Column(db.String(255), nullable=False)
@@ -104,7 +71,7 @@ class Submission(db.Model):
     )
     studentId = db.Column(
         db.BigInteger,
-        db.ForeignKey("STUDENT.studentId", ondelete="CASCADE", onupdate="CASCADE"),
+        db.ForeignKey("students.id", ondelete="CASCADE", onupdate="CASCADE"),
         nullable=False,
     )
     fileUrl = db.Column(db.String(1000), nullable=False)
