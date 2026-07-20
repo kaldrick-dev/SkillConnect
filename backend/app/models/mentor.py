@@ -16,5 +16,3 @@ class Mentor(db.Model):
     expertise = db.Column(db.String(255), nullable=False)
 
     internships = db.relationship("Internship", backref="mentor", cascade="all, delete-orphan")
-
-
