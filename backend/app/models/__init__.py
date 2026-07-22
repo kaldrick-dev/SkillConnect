@@ -1,4 +1,5 @@
 from .entities import (
+<<<<<<< HEAD
     User,
     Student,
     Mentor,
@@ -8,3 +9,25 @@ from .entities import (
     Submission,
     Certificate,
 )
+=======
+    Certificate,
+    Employer,
+    Internship,
+    Mentor,
+    Student,
+    Submission,
+    Task,
+    User,
+)
+
+__all__ = [
+    "Certificate",
+    "Employer",
+    "Internship",
+    "Mentor",
+    "Student",
+    "Submission",
+    "Task",
+    "User",
+]
+>>>>>>> dev
