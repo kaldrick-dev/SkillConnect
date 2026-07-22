@@ -14,19 +14,28 @@ def list_internships():
 
 @internships_bp.post("/")
 @jwt_required()
+@internships_bp.post("/")
+@jwt_required()
 def create_internship():
     data = request.get_json()
 
-    if not data or not all(k in data for k in ("title", "description")):
-        return jsonify({"error": "title and description are required"}), 400
-
-    employer_id = get_jwt_identity()
+    if not data or "title" not in data:
+        return jsonify({"error": "title is required"}), 400
 
     internship = Internship(
         title=data["title"],
-        description=data["description"],
-        employer_id=employer_id
+        description=data.get("description"),
+        location=data.get("location"),
+        employer_id=int(get_jwt_identity())
     )
+
+    db.session.add(internship)
+    db.session.commit()
+
+    return jsonify({
+        "message": "internship created",
+        "internship": internship.to_dict()
+    }), 201
 
     db.session.add(internship)
     db.session.commit()
