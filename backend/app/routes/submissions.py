@@ -1,64 +1,58 @@
-<<<<<<< HEAD
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.extensions import db
-=======
-from flask import Blueprint, jsonify
-from app.models import Submission
->>>>>>> dev
+from app.models import Submission, Task
+from datetime import datetime
 
 submissions_bp = Blueprint("submissions", __name__)
-
-submissions = []
 
 
 @submissions_bp.post("/task/<int:task_id>")
 @jwt_required()
 def submit_deliverable(task_id):
-<<<<<<< HEAD
-    data = request.get_json()
-
-    if not data or "content" not in data:
-        return jsonify({"error": "content is required"}), 400
+    Task.query.get_or_404(task_id)
+    data = request.get_json() or {}
 
     student_id = get_jwt_identity()
 
-    submission = {
-        "task_id": task_id,
-        "student_id": student_id,
-        "content": data["content"]
-    }
-    submissions.append(submission)
+    submission = Submission(
+        task_id=task_id,
+        student_id=int(student_id),
+        content_url=data.get("content_url"),
+        submitted_at=datetime.utcnow()
+    )
 
-    return jsonify({"message": "submission received", "submission": submission}), 201
-=======
-    return jsonify({"message": "submission endpoint not implemented"}), 501
->>>>>>> dev
+    db.session.add(submission)
+    db.session.commit()
+
+    return jsonify({
+        "message": "submission received",
+        "submission": submission.to_dict()
+    }), 201
 
 
 @submissions_bp.get("/task/<int:task_id>")
 def list_submissions(task_id):
-<<<<<<< HEAD
-    task_submissions = [s for s in submissions if s["task_id"] == task_id]
-    return jsonify(task_submissions), 200
-=======
+    Task.query.get_or_404(task_id)
     submissions = Submission.query.filter_by(task_id=task_id).all()
-    return jsonify([submission.to_dict() for submission in submissions])
->>>>>>> dev
+    return jsonify([s.to_dict() for s in submissions]), 200
 
 
 @submissions_bp.put("/<int:submission_id>/review")
 @jwt_required()
 def review_submission(submission_id):
-<<<<<<< HEAD
-    return jsonify({"message": "review noted"}), 200
-=======
     submission = Submission.query.get_or_404(submission_id)
+    data = request.get_json() or {}
+
+    submission.score = data.get("score", submission.score)
+    submission.feedback = data.get("feedback", submission.feedback)
+    submission.graded_by_id = int(get_jwt_identity())
+    submission.graded_at = datetime.utcnow()
+    submission.passed = data.get("passed", submission.passed)
+
+    db.session.commit()
+
     return jsonify({
-        "id": submission.id,
-        "score": submission.score,
-        "feedback": submission.feedback,
-        "graded_by_id": submission.graded_by_id,
-        "graded_at": submission.graded_at.isoformat() if submission.graded_at else None,
-    })
->>>>>>> dev
+        "message": "submission reviewed",
+        "submission": submission.to_dict()
+    }), 200
