@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from app.extensions import db
-from app.models import User
+from app.models import User, Student
 
 students_bp = Blueprint("students", __name__)
 
@@ -27,11 +27,12 @@ def update_student(student_id):
     if not student:
         return jsonify({"error": "student not found"}), 404
 
-    data = request.get_json()
-    if "full_name" in data:
-        student.full_name = data["full_name"]
+    data = request.get_json() or {}
+
     if "email" in data:
         student.email = data["email"]
+    if "is_active" in data:
+        student.is_active = data["is_active"]
 
     db.session.commit()
     return jsonify({"message": "student updated", "user": student.to_dict()}), 200
