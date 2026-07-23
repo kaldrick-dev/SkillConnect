@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Tasks — Student Dashboard</title>
+<style>
+  :root {
+    --paper: #FAFAF7;
+    --ink: #1C1E26;
+    --ink-soft: #5B5E6B;
+    --line: #E4E2DA;
+    --card: #FFFFFF;
+    --on-track: #2F6F62;
+    --on-track-bg: #E7F0EE;
+    --pending: #C97A2E;
+    --pending-bg: #FBEEDE;
+    --overdue: #B8443D;
+    --overdue-bg: #FBE9E7;
+    --focus: #2F6F62;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    line-height: 1.5;
+  }
+
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 48px 20px 80px;
+  }
+
+  header.page-head {
+    margin-bottom: 32px;
+  }
+
+  header.page-head h1 {
+    font-size: 1.6rem;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+
+  header.page-head p {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+  }
+
+  .task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .task-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 18px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, transform 0.1s ease;
+  }
+
+  .task-card:hover {
+    border-color: #C7C4B8;
+  }
+
+  .task-card:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  .task-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .task-title {
+    font-weight: 600;
+    font-size: 1rem;
+  }
+
+  .task-due {
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+    margin-top: 2px;
+  }
+
+  .badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .badge.pending   { color: var(--pending);   background: var(--pending-bg); }
+  .badge.submitted { color: var(--on-track);  background: var(--on-track-bg); }
+  .badge.overdue   { color: var(--overdue);   background: var(--overdue-bg); }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--ink-soft);
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+  }
+
+  /* Submission panel */
+  .panel-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(28, 30, 38, 0.35);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  @media (min-width: 640px) {
+    .panel-overlay { align-items: center; }
+  }
+
+  .panel {
+    background: var(--card);
+    width: 100%;
+    max-width: 520px;
+    border-radius: 14px 14px 0 0;
+    padding: 24px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  @media (min-width: 640px) {
+    .panel { border-radius: 14px; }
+  }
+
+  .panel h2 {
+    margin: 0 0 4px;
+    font-size: 1.2rem;
+  }
+
+  .panel .panel-due {
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+    margin-bottom: 18px;
+  }
+
+  .field-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  textarea, input[type="text"] {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    margin-bottom: 14px;
+  }
+
+  textarea:focus, input[type="text"]:focus {
+    outline: 2px solid var(--focus);
+    outline-offset: 1px;
+  }
+
+  textarea { min-height: 90px; resize: vertical; }
+
+  .panel-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+
+  button {
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    border: none;
+  }
+
+  .btn-primary {
+    background: var(--ink);
+    color: #fff;
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1px solid var(--line);
+  }
+
+  .submitted-view {
+    background: var(--on-track-bg);
+    border-radius: 8px;
+    padding: 14px;
+    font-size: 0.9rem;
+    color: var(--ink);
+  }
+
+  .submitted-view .label {
+    font-weight: 600;
+    color: var(--on-track);
+    font-size: 0.8rem;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(0);
+    background: var(--ink);
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-6px);
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="page-head">
+    <h1>My Tasks</h1>
+    <p>Everything assigned to you, in one place.</p>
+  </header>
+
+  <div id="taskList" class="task-list"></div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+  // ---- Mock data. Replace this with a fetch() call once the API is ready. ----
+  let tasks = [
+    {
+      id: "t1",
+      title: "Media Deconstruction Essay",
+      dueDate: "2026-07-28",
+      status: "pending", // pending | submitted | overdue
+      submission: null
+    },
+    {
+      id: "t2",
+      title: "Public Speaking: Rural Education Access",
+      dueDate: "2026-07-30",
+      status: "pending",
+      submission: null
+    },
+    {
+      id: "t3",
+      title: "Group Project Proposal",
+      dueDate: "2026-07-15",
+      status: "overdue",
+      submission: null
+    },
+    {
+      id: "t4",
+      title: "Weekly Reflection Journal",
+      dueDate: "2026-07-10",
+      status: "submitted",
+      submission: { text: "Reflected on the media literacy unit and how it applies to local radio coverage.", link: "" }
+    }
+  ];
+
+  const taskListEl = document.getElementById("taskList");
+  const toastEl = document.getElementById("toast");
+
+  function formatDate(d) {
+    return new Date(d + "T00:00:00").toLocaleDateString(undefined, {
+      month: "short", day: "numeric", year: "numeric"
+    });
+  }
+
+  function badgeLabel(status) {
+    if (status === "submitted") return "Submitted";
+    if (status === "overdue") return "Overdue";
+    return "Pending";
+  }
+
+  function renderTaskList() {
+    if (tasks.length === 0) {
+      taskListEl.innerHTML = `
+        <div class="empty-state">
+          <strong>No tasks assigned yet.</strong><br>
+          Check back once your instructor posts an assignment.
+        </div>`;
+      return;
+    }
+
+    taskListEl.innerHTML = tasks.map(task => `
+      <div class="task-card" tabindex="0" data-id="${task.id}" role="button" aria-label="Open ${task.title}">
+        <div class="task-top">
+          <div>
+            <div class="task-title">${task.title}</div>
+            <div class="task-due">Due ${formatDate(task.dueDate)}</div>
+          </div>
+          <span class="badge ${task.status}">${badgeLabel(task.status)}</span>
+        </div>
+      </div>
+    `).join("");
+
+    document.querySelectorAll(".task-card").forEach(card => {
+      card.addEventListener("click", () => openPanel(card.dataset.id));
+      card.addEventListener("keydown", e => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          openPanel(card.dataset.id);
+        }
+      });
+    });
+  }
+
+  function openPanel(taskId) {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const overlay = document.createElement("div");
+    overlay.className = "panel-overlay";
+
+    if (task.status === "submitted") {
+      overlay.innerHTML = `
+        <div class="panel">
+          <h2>${task.title}</h2>
+          <div class="panel-due">Due ${formatDate(task.dueDate)}</div>
+          <div class="submitted-view">
+            <span class="label">Your submission</span>
+            ${task.submission?.text ? task.submission.text : ""}
+            ${task.submission?.link ? `<br><a href="${task.submission.link}" target="_blank">${task.submission.link}</a>` : ""}
+          </div>
+          <div class="panel-actions" style="margin-top:16px;">
+            <button class="btn-secondary" data-close>Close</button>
+          </div>
+        </div>`;
+    } else {
+      overlay.innerHTML = `
+        <div class="panel">
+          <h2>${task.title}</h2>
+          <div class="panel-due">Due ${formatDate(task.dueDate)}${task.status === "overdue" ? " · Past due, late submissions still accepted" : ""}</div>
+
+          <label class="field-label" for="subText">Your answer</label>
+          <textarea id="subText" placeholder="Write your response here..."></textarea>
+
+          <label class="field-label" for="subLink">Link (optional)</label>
+          <input type="text" id="subLink" placeholder="https://github.com/your-repo or drive link">
+
+          <div class="panel-actions">
+            <button class="btn-secondary" data-close>Cancel</button>
+            <button class="btn-primary" data-submit>Submit</button>
+          </div>
+        </div>`;
+    }
+
+    document.body.appendChild(overlay);
+
+    overlay.querySelector("[data-close]")?.addEventListener("click", () => overlay.remove());
+    overlay.addEventListener("click", e => { if (e.target === overlay) overlay.remove(); });
+
+    overlay.querySelector("[data-submit]")?.addEventListener("click", () => {
+      const text = overlay.querySelector("#subText").value.trim();
+      const link = overlay.querySelector("#subLink").value.trim();
+
+      if (!text && !link) {
+        showToast("Add an answer or a link before submitting.");
+        return;
+      }
+
+      task.status = "submitted";
+      task.submission = { text, link };
+      overlay.remove();
+      renderTaskList();
+      showToast("Submitted!");
+    });
+  }
+
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    setTimeout(() => toastEl.classList.remove("show"), 2200);
+  }
+
+  renderTaskList();
+</script>
+
+</body>
+</html>
