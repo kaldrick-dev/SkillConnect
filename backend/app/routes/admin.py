@@ -1,19 +1,19 @@
 from flask import Blueprint, jsonify
-from flask_jwt_extended import jwt_required
 from app.models import User, Internship, Submission
+from app.utils import role_required
 
 admin_bp = Blueprint("admin", __name__)
 
 
 @admin_bp.get("/users")
-@jwt_required()
+@role_required("admin")
 def list_users():
     users = User.query.all()
     return jsonify([u.to_dict() for u in users]), 200
 
 
 @admin_bp.delete("/users/<int:user_id>")
-@jwt_required()
+@role_required("admin")
 def deactivate_user(user_id):
     user = User.query.get_or_404(user_id)
     user.is_active = False
@@ -23,7 +23,7 @@ def deactivate_user(user_id):
 
 
 @admin_bp.get("/stats")
-@jwt_required()
+@role_required("admin")
 def platform_stats():
     total_users = User.query.count()
     total_students = User.query.filter_by(role="student").count()
