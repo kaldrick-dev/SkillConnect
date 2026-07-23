@@ -35,6 +35,9 @@ class Certificate(db.Model):
         onupdate=db.func.now(),
     )
 
+    student = db.relationship("Student", back_populates="certificates")
+    internship = db.relationship("Internship", back_populates="certificates")
+
     def to_dict(self) -> dict:
         return {
             "id": self.id,

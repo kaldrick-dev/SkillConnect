@@ -35,6 +35,11 @@ class Internship(db.Model):
         back_populates="internship",
         cascade="all, delete-orphan",
     )
+    certificates = db.relationship(
+        "Certificate",
+        back_populates="internship",
+        cascade="all, delete-orphan",
+    )
 
     def to_dict(self) -> dict:
         return {

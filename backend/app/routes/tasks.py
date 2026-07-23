@@ -4,7 +4,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import get_jwt_identity
 
 from app.extensions import db
-from app.models import Internship, Submission, Task
+from app.models import Internship, Student, Submission, Task
 from app.utils import role_required
 
 tasks_bp = Blueprint("tasks", __name__)
@@ -46,9 +46,15 @@ def submit_task(task_id):
     Task.query.get_or_404(task_id)
     data = request.get_json() or {}
 
+    student = Student.query.filter_by(
+        user_id=int(get_jwt_identity())
+    ).first()
+    if not student:
+        return jsonify({"error": "student profile not found"}), 404
+
     submission = Submission(
         task_id=task_id,
-        student_id=int(get_jwt_identity()),
+        student_id=student.id,
         content_url=data.get("content_url"),
         submitted_at=datetime.utcnow(),
     )
