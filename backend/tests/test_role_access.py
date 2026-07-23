@@ -9,7 +9,7 @@ def app():
     app = create_app()
     app.config.update(
         TESTING=True,
-        JWT_SECRET_KEY="test-secret-with-at-least-32-bytes",
+        JWT_SECRET_KEY="9225b6d994c7c8a6de64ecc7d861db11abad82e42e303981f6bd6e4e7536b11d",
     )
     return app
 
@@ -36,8 +36,8 @@ def authorization_header(app, role):
         ("POST", "/api/internships/", "student"),
         ("PUT", "/api/internships/1", "student"),
         ("POST", "/api/internships/1/apply", "employer"),
-        ("POST", "/api/tasks/internship/1", "student"),
-        ("POST", "/api/submissions/task/1", "employer"),
+        ("POST", "/api/internships/1/tasks", "student"),
+        ("POST", "/api/tasks/1/submit", "employer"),
         ("PUT", "/api/submissions/1/review", "student"),
         ("POST", "/api/certificates/internship/1", "student"),
         ("GET", "/api/certificates/student/1", "employer"),
