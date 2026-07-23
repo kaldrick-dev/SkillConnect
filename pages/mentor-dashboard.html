@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assign Tasks — Mentor Dashboard</title>
+<style>
+  :root {
+    --paper: #FAFAF7;
+    --ink: #1C1E26;
+    --ink-soft: #5B5E6B;
+    --line: #E4E2DA;
+    --card: #FFFFFF;
+    --on-track: #2F6F62;
+    --on-track-bg: #E7F0EE;
+    --pending: #C97A2E;
+    --pending-bg: #FBEEDE;
+    --overdue: #B8443D;
+    --overdue-bg: #FBE9E7;
+    --focus: #2F6F62;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    line-height: 1.5;
+  }
+
+  .wrap {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 48px 20px 80px;
+  }
+
+  header.page-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  header.page-head h1 {
+    font-size: 1.6rem;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+
+  header.page-head p {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+  }
+
+  button {
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    border: none;
+  }
+
+  .btn-primary { background: var(--ink); color: #fff; }
+  .btn-secondary { background: transparent; color: var(--ink-soft); border: 1px solid var(--line); }
+
+  .task-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .task-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+
+  .task-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .task-title { font-weight: 600; font-size: 1rem; }
+  .task-meta { color: var(--ink-soft); font-size: 0.85rem; margin-top: 4px; }
+
+  .assignees {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .chip {
+    font-size: 0.78rem;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--pending-bg);
+    color: var(--pending);
+  }
+
+  .chip.submitted { background: var(--on-track-bg); color: var(--on-track); }
+  .chip.overdue { background: var(--overdue-bg); color: var(--overdue); }
+
+  .progress-line {
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    margin-top: 8px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--ink-soft);
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+  }
+
+  /* Panel (create/edit task) */
+  .panel-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(28, 30, 38, 0.35);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  @media (min-width: 640px) {
+    .panel-overlay { align-items: center; }
+  }
+
+  .panel {
+    background: var(--card);
+    width: 100%;
+    max-width: 560px;
+    border-radius: 14px 14px 0 0;
+    padding: 24px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  @media (min-width: 640px) {
+    .panel { border-radius: 14px; }
+  }
+
+  .panel h2 { margin: 0 0 18px; font-size: 1.2rem; }
+
+  .field-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  textarea, input[type="text"], input[type="date"] {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    margin-bottom: 14px;
+  }
+
+  textarea:focus, input:focus {
+    outline: 2px solid var(--focus);
+    outline-offset: 1px;
+  }
+
+  textarea { min-height: 80px; resize: vertical; }
+
+  .student-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .student-toggle {
+    font-size: 0.85rem;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .student-toggle.selected {
+    background: var(--ink);
+    color: #fff;
+    border-color: var(--ink);
+  }
+
+  .panel-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(0);
+    background: var(--ink);
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="page-head">
+    <div>
+      <h1>Assign Tasks</h1>
+      <p>Create tasks and track who's submitted.</p>
+    </div>
+    <button class="btn-primary" id="newTaskBtn">+ New task</button>
+  </header>
+
+  <div id="taskList" class="task-list"></div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+  // ---- Mock data. Replace with a real fetch()/POST to your API once it's ready. ----
+  let students = [
+    { id: "s1", name: "Asnath" },
+    { id: "s2", name: "Kaldrick" },
+    { id: "s3", name: "Uwase" },
+    { id: "s4", name: "Mugisha" }
+  ];
+
+  let tasks = [
+    {
+      id: "t1",
+      title: "Media Deconstruction Essay",
+      description: "Analyze a local news broadcast for bias and framing.",
+      dueDate: "2026-07-28",
+      assignedTo: ["s1", "s2"],
+      submissions: { s1: true, s2: false }
+    },
+    {
+      id: "t2",
+      title: "Group Project Proposal",
+      description: "Submit a one-page proposal for your final group project.",
+      dueDate: "2026-07-15",
+      assignedTo: ["s1", "s3", "s4"],
+      submissions: { s1: true, s3: true, s4: false }
+    }
+  ];
+
+  const taskListEl = document.getElementById("taskList");
+  const toastEl = document.getElementById("toast");
+
+  function formatDate(d) {
+    return new Date(d + "T00:00:00").toLocaleDateString(undefined, {
+      month: "short", day: "numeric", year: "numeric"
+    });
+  }
+
+  function studentName(id) {
+    return students.find(s => s.id === id)?.name || "Unknown";
+  }
+
+  function isOverdue(dueDate) {
+    return new Date(dueDate + "T00:00:00") < new Date(new Date().toDateString());
+  }
+
+  function renderTaskList() {
+    if (tasks.length === 0) {
+      taskListEl.innerHTML = `
+        <div class="empty-state">
+          <strong>No tasks created yet.</strong><br>
+          Click "New task" above to assign your first one.
+        </div>`;
+      return;
+    }
+
+    taskListEl.innerHTML = tasks.map(task => {
+      const submittedCount = Object.values(task.submissions).filter(Boolean).length;
+      const total = task.assignedTo.length;
+      const overdue = isOverdue(task.dueDate);
+
+      const chips = task.assignedTo.map(id => {
+        const done = task.submissions[id];
+        const cls = done ? "submitted" : (overdue ? "overdue" : "");
+        const label = done ? "Submitted" : (overdue ? "Overdue" : "Pending");
+        return `<span class="chip ${cls}">${studentName(id)} · ${label}</span>`;
+      }).join("");
+
+      return `
+        <div class="task-card" data-id="${task.id}">
+          <div class="task-top">
+            <div>
+              <div class="task-title">${task.title}</div>
+              <div class="task-meta">Due ${formatDate(task.dueDate)}</div>
+            </div>
+          </div>
+          <div class="progress-line">${submittedCount} of ${total} submitted</div>
+          <div class="assignees">${chips}</div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function openNewTaskPanel() {
+    const overlay = document.createElement("div");
+    overlay.className = "panel-overlay";
+
+    overlay.innerHTML = `
+      <div class="panel">
+        <h2>New task</h2>
+
+        <label class="field-label" for="taskTitle">Title</label>
+        <input type="text" id="taskTitle" placeholder="e.g. Public Speaking Reflection">
+
+        <label class="field-label" for="taskDesc">Description</label>
+        <textarea id="taskDesc" placeholder="What should students do?"></textarea>
+
+        <label class="field-label" for="taskDue">Due date</label>
+        <input type="date" id="taskDue">
+
+        <label class="field-label">Assign to</label>
+        <div class="student-picker" id="studentPicker">
+          ${students.map(s => `<button type="button" class="student-toggle" data-id="${s.id}">${s.name}</button>`).join("")}
+        </div>
+
+        <div class="panel-actions">
+          <button class="btn-secondary" data-close>Cancel</button>
+          <button class="btn-primary" data-create>Create task</button>
+        </div>
+      </div>`;
+
+    document.body.appendChild(overlay);
+
+    const selected = new Set();
+    overlay.querySelectorAll(".student-toggle").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.dataset.id;
+        if (selected.has(id)) {
+          selected.delete(id);
+          btn.classList.remove("selected");
+        } else {
+          selected.add(id);
+          btn.classList.add("selected");
+        }
+      });
+    });
+
+    overlay.querySelector("[data-close]").addEventListener("click", () => overlay.remove());
+    overlay.addEventListener("click", e => { if (e.target === overlay) overlay.remove(); });
+
+    overlay.querySelector("[data-create]").addEventListener("click", () => {
+      const title = overlay.querySelector("#taskTitle").value.trim();
+      const description = overlay.querySelector("#taskDesc").value.trim();
+      const dueDate = overlay.querySelector("#taskDue").value;
+
+      if (!title || !dueDate || selected.size === 0) {
+        showToast("Add a title, due date, and at least one student.");
+        return;
+      }
+
+      const submissions = {};
+      selected.forEach(id => submissions[id] = false);
+
+      tasks.unshift({
+        id: "t" + Date.now(),
+        title,
+        description,
+        dueDate,
+        assignedTo: [...selected],
+        submissions
+      });
+
+      overlay.remove();
+      renderTaskList();
+      showToast("Task created and assigned.");
+    });
+  }
+
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    setTimeout(() => toastEl.classList.remove("show"), 2200);
+  }
+
+  document.getElementById("newTaskBtn").addEventListener("click", openNewTaskPanel);
+  renderTaskList();
+</script>
+
+</body>
+</html>
