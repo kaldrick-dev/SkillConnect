@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import get_jwt_identity
 from app.extensions import db
 from app.models import Internship
+from app.utils import role_required
 
 internships_bp = Blueprint("internships", __name__)
 
@@ -13,9 +14,7 @@ def list_internships():
 
 
 @internships_bp.post("/")
-@jwt_required()
-@internships_bp.post("/")
-@jwt_required()
+@role_required("employer")
 def create_internship():
     data = request.get_json()
 
@@ -37,12 +36,6 @@ def create_internship():
         "internship": internship.to_dict()
     }), 201
 
-    db.session.add(internship)
-    db.session.commit()
-
-    return jsonify({"message": "internship created", "internship": internship.to_dict()}), 201
-
-
 @internships_bp.get("/<int:internship_id>")
 def get_internship(internship_id):
     internship = Internship.query.get(internship_id)
@@ -52,7 +45,7 @@ def get_internship(internship_id):
 
 
 @internships_bp.put("/<int:internship_id>")
-@jwt_required()
+@role_required("employer")
 def update_internship(internship_id):
     internship = Internship.query.get(internship_id)
     if not internship:
@@ -69,7 +62,7 @@ def update_internship(internship_id):
 
 
 @internships_bp.post("/<int:internship_id>/apply")
-@jwt_required()
+@role_required("student")
 def apply_to_internship(internship_id):
     internship = Internship.query.get(internship_id)
     if not internship:

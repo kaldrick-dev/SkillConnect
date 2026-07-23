@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required
 from app.extensions import db
 from app.models import Internship, Task
+from app.utils import role_required
 
 tasks_bp = Blueprint("tasks", __name__)
 
@@ -13,7 +13,7 @@ def list_tasks(internship_id):
 
 
 @tasks_bp.post("/internship/<int:internship_id>")
-@jwt_required()
+@role_required("employer")
 def create_task(internship_id):
     internship = Internship.query.get_or_404(internship_id)
     data = request.get_json() or {}

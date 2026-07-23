@@ -1,14 +1,15 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import get_jwt_identity
 from app.extensions import db
 from app.models import Submission, Task
+from app.utils import role_required
 from datetime import datetime
 
 submissions_bp = Blueprint("submissions", __name__)
 
 
 @submissions_bp.post("/task/<int:task_id>")
-@jwt_required()
+@role_required("student")
 def submit_deliverable(task_id):
     Task.query.get_or_404(task_id)
     data = request.get_json() or {}
@@ -39,7 +40,7 @@ def list_submissions(task_id):
 
 
 @submissions_bp.put("/<int:submission_id>/review")
-@jwt_required()
+@role_required("mentor", "employer")
 def review_submission(submission_id):
     submission = Submission.query.get_or_404(submission_id)
     data = request.get_json() or {}

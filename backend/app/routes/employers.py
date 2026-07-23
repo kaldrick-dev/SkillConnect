@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required
 from app.extensions import db
 from app.models import User, Internship
+from app.utils import role_required
 
 employers_bp = Blueprint("employers", __name__)
 
@@ -21,7 +21,7 @@ def get_employer(employer_id):
 
 
 @employers_bp.put("/<int:employer_id>")
-@jwt_required()
+@role_required("employer", "admin")
 def update_employer(employer_id):
     employer = User.query.filter_by(id=employer_id, role="employer").first()
     if not employer:

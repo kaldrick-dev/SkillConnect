@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required
 from app.extensions import db
 from app.models import User, Student
+from app.utils import role_required
 
 students_bp = Blueprint("students", __name__)
 
@@ -21,7 +21,7 @@ def get_student(student_id):
 
 
 @students_bp.put("/<int:student_id>")
-@jwt_required()
+@role_required("student", "admin")
 def update_student(student_id):
     student = User.query.filter_by(id=student_id, role="student").first()
     if not student:
