@@ -1,10 +1,8 @@
-from flask import Blueprint, jsonify, request
-from app.models import Certificate
-from app.extensions import db
+from flask import Blueprint, jsonify
 
 certificates_bp = Blueprint("certificates", __name__)
 
-
+@jwt_required()
 @certificates_bp.post("/internship/<int:internship_id>")
 def generate_certificate(internship_id):
     data = request.get_json() or {}
@@ -19,8 +17,8 @@ def generate_certificate(internship_id):
     db.session.commit()
     return jsonify(certificate.to_dict()), 201
 
-
+@jwt_required()
 @certificates_bp.get("/student/<int:student_id>")
 def list_student_certificates(student_id):
-    certificates = Certificate.query.filter_by(student_id=student_id).all()
-    return jsonify([certificate.to_dict() for certificate in certificates])
+    # TODO: return all certificates earned by a student
+    return jsonify([])
