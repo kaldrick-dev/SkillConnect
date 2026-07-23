@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Employer Profile</title>
+<style>
+  :root {
+    --paper: #FAFAF7;
+    --ink: #1C1E26;
+    --ink-soft: #5B5E6B;
+    --line: #E4E2DA;
+    --card: #FFFFFF;
+    --on-track: #2F6F62;
+    --on-track-bg: #E7F0EE;
+    --pending: #C97A2E;
+    --pending-bg: #FBEEDE;
+    --overdue: #B8443D;
+    --overdue-bg: #FBE9E7;
+    --focus: #2F6F62;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    line-height: 1.5;
+  }
+
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 48px 20px 80px;
+  }
+
+  header.page-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  header.page-head h1 {
+    font-size: 1.6rem;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+
+  header.page-head p {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+  }
+
+  button {
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    border: none;
+  }
+
+  .btn-primary { background: var(--ink); color: #fff; }
+  .btn-secondary { background: transparent; color: var(--ink-soft); border: 1px solid var(--line); }
+
+  .profile-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 24px;
+  }
+
+  .avatar-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: var(--on-track-bg);
+    color: var(--on-track);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  .company-name { font-weight: 600; font-size: 1.1rem; }
+  .company-industry { color: var(--ink-soft); font-size: 0.85rem; margin-top: 2px; }
+
+  /* View mode */
+  .field-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.9rem;
+  }
+
+  .field-row:last-child { border-bottom: none; }
+
+  .field-label { color: var(--ink-soft); flex-shrink: 0; }
+  .field-value { text-align: right; max-width: 60%; }
+
+  /* Edit mode */
+  .field-label-edit {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  input[type="text"], textarea, select {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    margin-bottom: 14px;
+    background: #fff;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    outline: 2px solid var(--focus);
+    outline-offset: 1px;
+  }
+
+  textarea { min-height: 80px; resize: vertical; }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 18px;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(0);
+    background: var(--ink);
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="page-head">
+    <div>
+      <h1>Employer Profile</h1>
+      <p>How students and mentors see your organization.</p>
+    </div>
+    <button class="btn-secondary" id="toggleBtn">Edit</button>
+  </header>
+
+  <div id="profileCard" class="profile-card"></div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+  // ---- Mock data. Replace with a fetch() call to your API once it's ready. ----
+  let profile = {
+    companyName: "Radio Salus",
+    industry: "Media & Broadcasting",
+    location: "Huye, Rwanda",
+    website: "https://radiosalus.rw",
+    contactEmail: "internships@radiosalus.rw",
+    description: "A community radio station covering rural education, local governance, and youth issues across the Southern Province."
+  };
+
+  let isEditing = false;
+  const cardEl = document.getElementById("profileCard");
+  const toggleBtn = document.getElementById("toggleBtn");
+
+  function initials(name) {
+    return name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+  }
+
+  function renderView() {
+    cardEl.innerHTML = `
+      <div class="avatar-row">
+        <div class="avatar">${initials(profile.companyName)}</div>
+        <div>
+          <div class="company-name">${profile.companyName}</div>
+          <div class="company-industry">${profile.industry}</div>
+        </div>
+      </div>
+
+      <div class="field-row"><span class="field-label">Location</span><span class="field-value">${profile.location}</span></div>
+      <div class="field-row"><span class="field-label">Website</span><span class="field-value">${profile.website}</span></div>
+      <div class="field-row"><span class="field-label">Contact email</span><span class="field-value">${profile.contactEmail}</span></div>
+      <div class="field-row"><span class="field-label">About</span><span class="field-value">${profile.description}</span></div>
+    `;
+  }
+
+  function renderEdit() {
+    cardEl.innerHTML = `
+      <label class="field-label-edit" for="fCompanyName">Company name</label>
+      <input type="text" id="fCompanyName" value="${profile.companyName}">
+
+      <label class="field-label-edit" for="fIndustry">Industry</label>
+      <input type="text" id="fIndustry" value="${profile.industry}">
+
+      <label class="field-label-edit" for="fLocation">Location</label>
+      <input type="text" id="fLocation" value="${profile.location}">
+
+      <label class="field-label-edit" for="fWebsite">Website</label>
+      <input type="text" id="fWebsite" value="${profile.website}">
+
+      <label class="field-label-edit" for="fEmail">Contact email</label>
+      <input type="text" id="fEmail" value="${profile.contactEmail}">
+
+      <label class="field-label-edit" for="fDesc">About</label>
+      <textarea id="fDesc">${profile.description}</textarea>
+
+      <div class="actions">
+        <button class="btn-secondary" id="cancelBtn">Cancel</button>
+        <button class="btn-primary" id="saveBtn">Save changes</button>
+      </div>
+    `;
+
+    document.getElementById("cancelBtn").addEventListener("click", () => {
+      isEditing = false;
+      toggleBtn.textContent = "Edit";
+      renderView();
+    });
+
+    document.getElementById("saveBtn").addEventListener("click", () => {
+      const name = document.getElementById("fCompanyName").value.trim();
+      const email = document.getElementById("fEmail").value.trim();
+
+      if (!name || !email) {
+        showToast("Company name and contact email are required.");
+        return;
+      }
+
+      profile = {
+        companyName: name,
+        industry: document.getElementById("fIndustry").value.trim(),
+        location: document.getElementById("fLocation").value.trim(),
+        website: document.getElementById("fWebsite").value.trim(),
+        contactEmail: email,
+        description: document.getElementById("fDesc").value.trim()
+      };
+
+      isEditing = false;
+      toggleBtn.textContent = "Edit";
+      renderView();
+      showToast("Profile updated.");
+    });
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2200);
+  }
+
+  toggleBtn.addEventListener("click", () => {
+    isEditing = !isEditing;
+    toggleBtn.textContent = isEditing ? "Cancel" : "Edit";
+    isEditing ? renderEdit() : renderView();
+  });
+
+  renderView();
+</script>
+
+</body>
+</html>
