@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Application — Student</title>
+<style>
+  :root {
+    --paper: #FAFAF7;
+    --ink: #1C1E26;
+    --ink-soft: #5B5E6B;
+    --line: #E4E2DA;
+    --card: #FFFFFF;
+    --on-track: #2F6F62;
+    --on-track-bg: #E7F0EE;
+    --pending: #C97A2E;
+    --pending-bg: #FBEEDE;
+    --overdue: #B8443D;
+    --overdue-bg: #FBE9E7;
+    --focus: #2F6F62;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    line-height: 1.5;
+  }
+
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 48px 20px 80px;
+  }
+
+  header.page-head { margin-bottom: 28px; }
+
+  header.page-head h1 {
+    font-size: 1.6rem;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+
+  header.page-head p {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+  }
+
+  .status-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 22px;
+    margin-bottom: 20px;
+  }
+
+  .status-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .status-badge {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 999px;
+  }
+
+  .status-badge.pending { color: var(--pending); background: var(--pending-bg); }
+  .status-badge.accepted { color: var(--on-track); background: var(--on-track-bg); }
+  .status-badge.rejected { color: var(--overdue); background: var(--overdue-bg); }
+  .status-badge.draft { color: var(--ink-soft); background: #F0EFEA; }
+
+  .status-note {
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+    margin-top: 4px;
+  }
+
+  .timeline {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+  }
+
+  .timeline-step {
+    display: flex;
+    gap: 12px;
+    padding-bottom: 16px;
+    position: relative;
+  }
+
+  .timeline-step:last-child { padding-bottom: 0; }
+
+  .timeline-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--line);
+    margin-top: 4px;
+    flex-shrink: 0;
+  }
+
+  .timeline-step.done .timeline-dot { background: var(--on-track); }
+  .timeline-step.current .timeline-dot { background: var(--pending); }
+
+  .timeline-step:not(:last-child)::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 14px;
+    bottom: -2px;
+    width: 2px;
+    background: var(--line);
+  }
+
+  .timeline-label { font-weight: 600; font-size: 0.9rem; }
+  .timeline-date { color: var(--ink-soft); font-size: 0.8rem; margin-top: 2px; }
+
+  .details-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 22px;
+  }
+
+  .details-card h2 {
+    font-size: 1.05rem;
+    margin: 0 0 14px;
+  }
+
+  .field-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.9rem;
+  }
+
+  .field-row:last-child { border-bottom: none; }
+
+  .field-label { color: var(--ink-soft); flex-shrink: 0; }
+  .field-value { text-align: right; }
+
+  .actions { display: flex; gap: 10px; margin-top: 18px; }
+
+  button {
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    border: none;
+  }
+
+  .btn-primary { background: var(--ink); color: #fff; }
+  .btn-secondary { background: transparent; color: var(--ink-soft); border: 1px solid var(--line); }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--ink-soft);
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="page-head">
+    <h1>My Application</h1>
+    <p>Track the status of your application.</p>
+  </header>
+
+  <div id="content"></div>
+</div>
+
+<script>
+  // ---- Mock data. Replace with a fetch() call to your API once it's ready. ----
+  const application = {
+    status: "pending", // draft | pending | accepted | rejected
+    submittedDate: "2026-07-18",
+    reviewNote: "",
+    fields: {
+      "Program": "Media Literacy Track",
+      "Preferred mentor area": "Public Speaking & Broadcasting",
+      "Motivation": "Interested in community radio and rural education access.",
+      "Availability": "Weekday evenings"
+    },
+    timeline: [
+      { label: "Application submitted", date: "2026-07-18", state: "done" },
+      { label: "Under review by mentor coordinator", date: "", state: "current" },
+      { label: "Decision", date: "", state: "upcoming" }
+    ]
+  };
+
+  const contentEl = document.getElementById("content");
+
+  function formatDate(d) {
+    if (!d) return "";
+    return new Date(d + "T00:00:00").toLocaleDateString(undefined, {
+      month: "short", day: "numeric", year: "numeric"
+    });
+  }
+
+  function statusCopy(status) {
+    switch (status) {
+      case "accepted": return { label: "Accepted", note: "You're in! Check your dashboard for next steps." };
+      case "rejected": return { label: "Not accepted", note: "This round didn't work out. You can revise and resubmit below." };
+      case "draft": return { label: "Draft", note: "You haven't submitted this yet." };
+      default: return { label: "Pending review", note: "Your application is being reviewed. This usually takes a few days." };
+    }
+  }
+
+  function render() {
+    if (!application) {
+      contentEl.innerHTML = `
+        <div class="empty-state">
+          <strong>You haven't applied yet.</strong><br>
+          Start an application to get matched with a mentor.
+        </div>`;
+      return;
+    }
+
+    const { label, note } = statusCopy(application.status);
+
+    const timelineHtml = application.timeline.map(step => `
+      <div class="timeline-step ${step.state}">
+        <div class="timeline-dot"></div>
+        <div>
+          <div class="timeline-label">${step.label}</div>
+          ${step.date ? `<div class="timeline-date">${formatDate(step.date)}</div>` : ""}
+        </div>
+      </div>
+    `).join("");
+
+    const fieldsHtml = Object.entries(application.fields).map(([label, value]) => `
+      <div class="field-row">
+        <span class="field-label">${label}</span>
+        <span class="field-value">${value}</span>
+      </div>
+    `).join("");
+
+    contentEl.innerHTML = `
+      <div class="status-card">
+        <div class="status-top">
+          <strong>Status</strong>
+          <span class="status-badge ${application.status}">${label}</span>
+        </div>
+        <div class="status-note">${note}</div>
+
+        <div class="timeline">${timelineHtml}</div>
+
+        ${application.status === "rejected" ? `
+          <div class="actions">
+            <button class="btn-primary" id="reviseBtn">Revise & resubmit</button>
+          </div>` : ""}
+      </div>
+
+      <div class="details-card">
+        <h2>Your submission</h2>
+        ${fieldsHtml}
+      </div>
+    `;
+
+    document.getElementById("reviseBtn")?.addEventListener("click", () => {
+      alert("This would open your application back up for editing.");
+    });
+  }
+
+  render();
+</script>
+
+</body>
+</html>
