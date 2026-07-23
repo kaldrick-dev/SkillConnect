@@ -2,6 +2,7 @@ from flask import Flask
 
 from app.config import Config
 from app.extensions import db, migrate, jwt, cors
+from app.models import *  # noqa: F401,F403
 
 
 def create_app():

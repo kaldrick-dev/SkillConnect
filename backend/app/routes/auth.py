@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import create_access_token
 from app.extensions import db
-from app.models.user import User
+from app.models import User
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -9,19 +10,21 @@ auth_bp = Blueprint("auth", __name__)
 def register():
     data = request.get_json()
 
-    if not data or not all(k in data for k in ("full_name", "email", "password", "role")):
-        return jsonify({"error": "full_name, email, password and role are required"}), 400
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
 
-    # check role is valid
-    if data["role"] not in ("student", "mentor", "employer", "admin"):
-        return jsonify({"error": "role must be student, mentor, employer or admin"}), 400
+    required = ["email", "password", "role"]
+    for field in required:
+        if field not in data:
+            return jsonify({"error": f"{field} is required"}), 400
 
-    # looking if email already exists
+    if data["role"] not in ("student", "employer", "mentor", "admin"):
+        return jsonify({"error": "Invalid role"}), 400
+
     if User.query.filter_by(email=data["email"]).first():
-        return jsonify({"error": "email already registered"}), 409
+        return jsonify({"error": "Email already registered"}), 409
 
     user = User(
-        full_name=data["full_name"],
         email=data["email"],
         role=data["role"]
     )
@@ -30,28 +33,33 @@ def register():
     db.session.add(user)
     db.session.commit()
 
-    return jsonify({"message": "user registered successfully", "user": user.to_dict()}), 201
+    return jsonify({
+        "message": "User registered successfully",
+        "user": user.to_dict()
+    }), 201
 
 
 @auth_bp.post("/login")
 def login():
-   data = request.get_json()
+    data = request.get_json()
 
-   if not data or not all(k in data for k in ("email", "password")):
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    if not all(k in data for k in ("email", "password")):
         return jsonify({"error": "email and password are required"}), 400
 
-   user = User.query.filter_by(email=data["email"]).first()
+    user = User.query.filter_by(email=data["email"]).first()
 
-   if not user or not user.check_password(data["password"]):
-        return jsonify({"error": "invalid email or password"}), 401
+    if not user or not user.check_password(data["password"]):
+        return jsonify({"error": "Invalid credentials"}), 401
 
-   access_token = create_access_token(
+    token = create_access_token(
         identity=str(user.id),
         additional_claims={"role": user.role}
     )
 
-   return jsonify({
-        "message": "login successful",
-        "access_token": access_token,
+    return jsonify({
+        "access_token": token,
         "user": user.to_dict()
     }), 200
