@@ -38,7 +38,7 @@ def register_blueprints(app):
     app.register_blueprint(students_bp, url_prefix="/api/students")
     app.register_blueprint(mentors_bp, url_prefix="/api/mentors")
     app.register_blueprint(employers_bp, url_prefix="/api/employers")
-    app.register_blueprint(internships_bp, url_prefix="/api/internships")
+    app.register_blueprint(internships_bp, url_prefix="/api")
     app.register_blueprint(tasks_bp, url_prefix="/api")
     app.register_blueprint(submissions_bp, url_prefix="/api/submissions")
     app.register_blueprint(certificates_bp, url_prefix="/api/certificates")

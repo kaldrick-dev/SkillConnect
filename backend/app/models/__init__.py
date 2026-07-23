@@ -6,6 +6,8 @@ from .internship import Internship
 from .task import Task
 from .submission import Submission
 from .certificate import Certificate
+from .internship_application import InternshipApplication
+from .assessment import Assessment
 
 __all__ = [
     "User",
@@ -16,4 +18,6 @@ __all__ = [
     "Task",
     "Submission",
     "Certificate",
+    "InternshipApplication",
+    "Assessment",
 ]

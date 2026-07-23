@@ -36,7 +36,7 @@ class Submission(db.Model):
     )
 
     task = db.relationship("Task", back_populates="submissions")
-    student = db.relationship("Student", backref="submissions")
+    student = db.relationship("Student", back_populates="submissions")
     grader = db.relationship("User", foreign_keys=[graded_by_id])
 
     def to_dict(self) -> dict:

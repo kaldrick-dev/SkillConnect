@@ -33,18 +33,13 @@ class Student(db.Model):
     user = db.relationship("User", back_populates="student")
     submissions = db.relationship(
         "Submission",
-        backref="student",
-        cascade="all, delete-orphan",
-    )
-    internships = db.relationship(
-        "Internship",
-        backref="student",
+        back_populates="student",
         cascade="all, delete-orphan",
     )
     certificates = db.relationship(
         "Certificate",
-        secondary="INTERNSHIP",
-        viewonly=True,
+        back_populates="student",
+        cascade="all, delete-orphan",
     )
 
     def to_dict(self) -> dict:
