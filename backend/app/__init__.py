@@ -33,6 +33,7 @@ def register_blueprints(app):
     from app.routes.submissions import submissions_bp
     from app.routes.certificates import certificates_bp
     from app.routes.admin import admin_bp
+    from app.routes.docs import docs_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(students_bp, url_prefix="/api/students")
@@ -43,3 +44,4 @@ def register_blueprints(app):
     app.register_blueprint(submissions_bp, url_prefix="/api/submissions")
     app.register_blueprint(certificates_bp, url_prefix="/api/certificates")
     app.register_blueprint(admin_bp, url_prefix="/api/admin")
+    app.register_blueprint(docs_bp, url_prefix="/api")

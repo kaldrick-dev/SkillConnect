@@ -1,0 +1,687 @@
+openapi: 3.0.3
+
+info:
+  title: SkillConnect API
+  version: 1.0.0
+  description: API for internships, tasks, submissions, assessments, and certificates.
+
+servers:
+  - url: /
+
+tags:
+  - name: Authentication
+  - name: Internships
+  - name: Tasks
+  - name: Submissions
+  - name: Students
+  - name: Mentors
+  - name: Employers
+  - name: Certificates
+  - name: Admin
+
+paths:
+  /api/health:
+    get:
+      summary: Check whether the API is running
+      responses:
+        "200":
+          description: API is running
+
+  /api/auth/register:
+    post:
+      tags: [Authentication]
+      summary: Register a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, role]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                role:
+                  type: string
+                  enum: [student, employer, mentor, admin]
+      responses:
+        "201":
+          description: User registered
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          description: Email is already registered
+
+  /api/auth/login:
+    post:
+      tags: [Authentication]
+      summary: Log in and receive an access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  user:
+                    $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/internships:
+    get:
+      tags: [Internships]
+      summary: Browse, search, and filter internships
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: location
+          in: query
+          schema:
+            type: string
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of internships
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Internship"
+    post:
+      tags: [Internships]
+      summary: Create an internship
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title:
+                  type: string
+                code:
+                  type: string
+                description:
+                  type: string
+                location:
+                  type: string
+                is_active:
+                  type: boolean
+      responses:
+        "201":
+          description: Internship created
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/internships/{internship_id}:
+    parameters:
+      - $ref: "#/components/parameters/InternshipId"
+    get:
+      tags: [Internships]
+      summary: Get one internship
+      responses:
+        "200":
+          description: Internship details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Internship"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Internships]
+      summary: Update an internship
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                location:
+                  type: string
+                is_active:
+                  type: boolean
+      responses:
+        "200":
+          description: Internship updated
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/internships/{internship_id}/apply:
+    post:
+      tags: [Internships]
+      summary: Apply to an internship
+      description: Repeating the request returns the existing application.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/InternshipId"
+      responses:
+        "201":
+          description: Application submitted
+        "200":
+          description: Student had already applied
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/internships/{internship_id}/assess:
+    post:
+      tags: [Internships]
+      summary: Assess a student
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/InternshipId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [student_id, score]
+              properties:
+                student_id:
+                  type: integer
+                score:
+                  type: number
+                  minimum: 0
+                  maximum: 100
+                feedback:
+                  type: string
+                completed:
+                  type: boolean
+                  default: true
+      responses:
+        "200":
+          description: Assessment saved
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/internships/{internship_id}/certificate:
+    post:
+      tags: [Certificates]
+      summary: Generate a completion certificate
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/InternshipId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [student_id]
+              properties:
+                student_id:
+                  type: integer
+      responses:
+        "201":
+          description: Certificate generated
+        "200":
+          description: Certificate was already generated
+        "400":
+          description: Internship is not completed
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/internships/{internship_id}/tasks:
+    get:
+      tags: [Tasks]
+      summary: List tasks for an internship
+      parameters:
+        - $ref: "#/components/parameters/InternshipId"
+      responses:
+        "200":
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [Tasks]
+      summary: Create a task for an internship
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/InternshipId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                order:
+                  type: integer
+                max_score:
+                  type: number
+                due_date:
+                  type: string
+                  format: date-time
+      responses:
+        "201":
+          description: Task created
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/tasks/{task_id}/submit:
+    post:
+      tags: [Tasks]
+      summary: Submit work for a task
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content_url:
+                  type: string
+                  format: uri
+      responses:
+        "201":
+          description: Submission received
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/submissions/task/{task_id}:
+    get:
+      tags: [Submissions]
+      summary: List submissions for a task
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of submissions
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/submissions/{submission_id}/review:
+    put:
+      tags: [Submissions]
+      summary: Review a submission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: submission_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                score:
+                  type: number
+                feedback:
+                  type: string
+                passed:
+                  type: boolean
+      responses:
+        "200":
+          description: Submission reviewed
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/students/:
+    get:
+      tags: [Students]
+      summary: List students
+      responses:
+        "200":
+          description: List of students
+
+  /api/students/{student_id}:
+    parameters:
+      - name: student_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags: [Students]
+      summary: Get one student
+      responses:
+        "200":
+          description: Student details
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Students]
+      summary: Update a student
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Student updated
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/mentors/:
+    get:
+      tags: [Mentors]
+      summary: List mentors
+      responses:
+        "200":
+          description: List of mentors
+
+  /api/mentors/{mentor_id}:
+    get:
+      tags: [Mentors]
+      summary: Get one mentor
+      parameters:
+        - name: mentor_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Mentor details
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/mentors/{mentor_id}/students:
+    get:
+      tags: [Mentors]
+      summary: List students assigned to a mentor
+      parameters:
+        - name: mentor_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of assigned students
+
+  /api/employers/:
+    get:
+      tags: [Employers]
+      summary: List employers
+      responses:
+        "200":
+          description: List of employers
+
+  /api/employers/{employer_id}:
+    parameters:
+      - name: employer_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags: [Employers]
+      summary: Get one employer
+      responses:
+        "200":
+          description: Employer details
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Employers]
+      summary: Update an employer
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Employer updated
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/employers/{employer_id}/internships:
+    get:
+      tags: [Employers]
+      summary: List internships created by an employer
+      parameters:
+        - name: employer_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of internships
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/certificates/student/{student_id}:
+    get:
+      tags: [Certificates]
+      summary: List certificates earned by a student
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: student_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of certificates
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/admin/users:
+    get:
+      tags: [Admin]
+      summary: List all users
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of users
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/admin/users/{user_id}:
+    delete:
+      tags: [Admin]
+      summary: Deactivate a user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User deactivated
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/admin/stats:
+    get:
+      tags: [Admin]
+      summary: View platform statistics
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Platform statistics
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    InternshipId:
+      name: internship_id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  responses:
+    BadRequest:
+      description: Invalid request data
+    Unauthorized:
+      description: Missing or invalid access token
+    Forbidden:
+      description: The user's role cannot perform this action
+    NotFound:
+      description: Resource not found
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+        is_active:
+          type: boolean
+
+    Internship:
+      type: object
+      properties:
+        id:
+          type: integer
+        employer_id:
+          type: integer
+        title:
+          type: string
+        code:
+          type: string
+        description:
+          type: string
+        location:
+          type: string
+        is_active:
+          type: boolean
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+        internship_id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        max_score:
+          type: number
+        due_date:
+          type: string
+          format: date-time
