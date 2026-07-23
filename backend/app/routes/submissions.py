@@ -8,30 +8,6 @@ from datetime import datetime
 submissions_bp = Blueprint("submissions", __name__)
 
 
-@submissions_bp.post("/task/<int:task_id>")
-@role_required("student")
-def submit_deliverable(task_id):
-    Task.query.get_or_404(task_id)
-    data = request.get_json() or {}
-
-    student_id = get_jwt_identity()
-
-    submission = Submission(
-        task_id=task_id,
-        student_id=int(student_id),
-        content_url=data.get("content_url"),
-        submitted_at=datetime.utcnow()
-    )
-
-    db.session.add(submission)
-    db.session.commit()
-
-    return jsonify({
-        "message": "submission received",
-        "submission": submission.to_dict()
-    }), 201
-
-
 @submissions_bp.get("/task/<int:task_id>")
 def list_submissions(task_id):
     Task.query.get_or_404(task_id)
