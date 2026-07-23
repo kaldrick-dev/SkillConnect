@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skills Assessment — Mentor</title>
+<style>
+  :root {
+    --paper: #FAFAF7;
+    --ink: #1C1E26;
+    --ink-soft: #5B5E6B;
+    --line: #E4E2DA;
+    --card: #FFFFFF;
+    --on-track: #2F6F62;
+    --on-track-bg: #E7F0EE;
+    --pending: #C97A2E;
+    --pending-bg: #FBEEDE;
+    --overdue: #B8443D;
+    --overdue-bg: #FBE9E7;
+    --focus: #2F6F62;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    line-height: 1.5;
+  }
+
+  .wrap {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 48px 20px 80px;
+  }
+
+  header.page-head { margin-bottom: 24px; }
+
+  header.page-head h1 {
+    font-size: 1.6rem;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+
+  header.page-head p {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+  }
+
+  .field-label-edit {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  select, textarea {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    margin-bottom: 18px;
+    background: #fff;
+  }
+
+  select:focus, textarea:focus { outline: 2px solid var(--focus); outline-offset: 1px; }
+
+  .skills-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 22px;
+  }
+
+  .skill-row {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .skill-row:last-child { border-bottom: none; }
+
+  .skill-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .skill-name { font-weight: 600; font-size: 0.95rem; }
+  .skill-score-label { font-size: 0.85rem; color: var(--ink-soft); }
+
+  .rating {
+    display: flex;
+    gap: 6px;
+  }
+
+  .rating-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: transparent;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+
+  .rating-btn.selected {
+    background: var(--on-track);
+    border-color: var(--on-track);
+    color: #fff;
+  }
+
+  .overall-notes { margin-top: 20px; }
+
+  .actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  button.submit-btn {
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 10px 18px;
+    cursor: pointer;
+    border: none;
+    background: var(--ink);
+    color: #fff;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(0);
+    background: var(--ink);
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
+
+  .scale-hint {
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    margin-bottom: 16px;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="page-head">
+    <h1>Skills Assessment</h1>
+    <p>Rate your student's progress across key skills.</p>
+  </header>
+
+  <label class="field-label-edit" for="studentSelect">Student</label>
+  <select id="studentSelect"></select>
+
+  <div class="skills-card">
+    <div class="scale-hint">1 = Needs support · 5 = Excellent</div>
+    <div id="skillsList"></div>
+
+    <div class="overall-notes">
+      <label class="field-label-edit" for="overallNotes">Overall feedback</label>
+      <textarea id="overallNotes" placeholder="What's going well, and what should they focus on next?"></textarea>
+    </div>
+
+    <div class="actions">
+      <button class="submit-btn" id="submitBtn">Submit assessment</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+  // ---- Mock data. Replace with a fetch() call to your API once it's ready. ----
+  const students = [
+    { id: "s1", name: "Asnath" },
+    { id: "s2", name: "Kaldrick" },
+    { id: "s3", name: "Uwase" },
+    { id: "s4", name: "Mugisha" }
+  ];
+
+  const skillList = [
+    "Public speaking",
+    "Media analysis",
+    "Written communication",
+    "Collaboration",
+    "Time management"
+  ];
+
+  let ratings = {}; // { skillName: number }
+
+  const studentSelect = document.getElementById("studentSelect");
+  const skillsListEl = document.getElementById("skillsList");
+  const toastEl = document.getElementById("toast");
+
+  function renderStudentOptions() {
+    studentSelect.innerHTML = students.map(s => `<option value="${s.id}">${s.name}</option>`).join("");
+  }
+
+  function renderSkills() {
+    skillsListEl.innerHTML = skillList.map(skill => `
+      <div class="skill-row">
+        <div class="skill-top">
+          <span class="skill-name">${skill}</span>
+          <span class="skill-score-label" id="label-${skill.replace(/\s+/g, "-")}">${ratings[skill] ? ratings[skill] + " / 5" : "Not rated"}</span>
+        </div>
+        <div class="rating" data-skill="${skill}">
+          ${[1,2,3,4,5].map(n => `
+            <button type="button" class="rating-btn ${ratings[skill] === n ? "selected" : ""}" data-value="${n}">${n}</button>
+          `).join("")}
+        </div>
+      </div>
+    `).join("");
+
+    skillsListEl.querySelectorAll(".rating").forEach(group => {
+      const skill = group.dataset.skill;
+      group.querySelectorAll(".rating-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          ratings[skill] = parseInt(btn.dataset.value, 10);
+          renderSkills();
+        });
+      });
+    });
+  }
+
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    setTimeout(() => toastEl.classList.remove("show"), 2200);
+  }
+
+  document.getElementById("submitBtn").addEventListener("click", () => {
+    const rated = Object.keys(ratings).length;
+    if (rated < skillList.length) {
+      showToast(`Rate all ${skillList.length} skills before submitting.`);
+      return;
+    }
+
+    const payload = {
+      studentId: studentSelect.value,
+      ratings: { ...ratings },
+      notes: document.getElementById("overallNotes").value.trim()
+    };
+
+    // This is where you'd POST `payload` to your API.
+    console.log("Assessment submitted:", payload);
+
+    ratings = {};
+    document.getElementById("overallNotes").value = "";
+    renderSkills();
+    showToast("Assessment submitted.");
+  });
+
+  // Reset ratings when switching students, since each assessment is per-student.
+  studentSelect.addEventListener("change", () => {
+    ratings = {};
+    document.getElementById("overallNotes").value = "";
+    renderSkills();
+  });
+
+  renderStudentOptions();
+  renderSkills();
+</script>
+
+</body>
+</html>
