@@ -2,11 +2,16 @@ from flask import Flask
 
 from app.config import Config
 from app.extensions import db, migrate, jwt, cors
+from app.models import *  # noqa: F401,F403
 
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+    if str(app.config["SQLALCHEMY_DATABASE_URI"]).startswith("sqlite"):
+        # Test suites replace the production URI with SQLite at runtime;
+        # QueuePool options are not valid for SQLite's in-memory pool.
+        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {}
 
     db.init_app(app)
     migrate.init_app(app, db)
@@ -32,13 +37,15 @@ def register_blueprints(app):
     from app.routes.submissions import submissions_bp
     from app.routes.certificates import certificates_bp
     from app.routes.admin import admin_bp
+    from app.routes.docs import docs_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(students_bp, url_prefix="/api/students")
     app.register_blueprint(mentors_bp, url_prefix="/api/mentors")
     app.register_blueprint(employers_bp, url_prefix="/api/employers")
-    app.register_blueprint(internships_bp, url_prefix="/api/internships")
-    app.register_blueprint(tasks_bp, url_prefix="/api/tasks")
+    app.register_blueprint(internships_bp, url_prefix="/api")
+    app.register_blueprint(tasks_bp, url_prefix="/api")
     app.register_blueprint(submissions_bp, url_prefix="/api/submissions")
     app.register_blueprint(certificates_bp, url_prefix="/api/certificates")
     app.register_blueprint(admin_bp, url_prefix="/api/admin")
+    app.register_blueprint(docs_bp, url_prefix="/api")

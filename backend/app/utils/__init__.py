@@ -1,1 +1,3 @@
-# Shared helpers go here (e.g. role-based access decorators, response formatting).
+from .auth import role_required
+
+__all__ = ["role_required"]

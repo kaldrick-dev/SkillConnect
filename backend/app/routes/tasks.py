@@ -1,15 +1,90 @@
-from flask import Blueprint, jsonify
+from datetime import datetime
+
+from flask import Blueprint, request, jsonify
+from flask_jwt_extended import get_jwt_identity
+
+from app.extensions import db
+from app.models import Internship, Student, Submission, Task
+from app.utils import role_required
 
 tasks_bp = Blueprint("tasks", __name__)
 
 
-@tasks_bp.get("/internship/<int:internship_id>")
+@tasks_bp.get("/internships/<int:internship_id>/tasks")
 def list_tasks(internship_id):
-    # TODO: return tasks assigned within an internship
-    return jsonify([])
+    internship = Internship.query.get_or_404(internship_id)
+    return jsonify([task.to_dict() for task in internship.tasks]), 200
 
 
-@tasks_bp.post("/internship/<int:internship_id>")
+@tasks_bp.post("/internships/<int:internship_id>/tasks")
+@role_required("employer")
 def create_task(internship_id):
-    # TODO: mentor/employer assigns a new task with a deadline
-    return jsonify({"message": "not implemented"}), 501
+    internship = Internship.query.get_or_404(internship_id)
+    employer = internship.employer
+    if not employer or employer.user_id != int(get_jwt_identity()):
+        return jsonify({"error": "You can only manage your own internships"}), 403
+    data = request.get_json() or {}
+
+    if not data.get("title"):
+        return jsonify({"error": "title is required"}), 400
+
+    due_date = data.get("due_date")
+    if due_date:
+        try:
+            due_date = datetime.fromisoformat(
+                str(due_date).replace("Z", "+00:00")
+            )
+        except ValueError:
+            return jsonify({"error": "due_date must be a valid ISO date"}), 400
+
+    task = Task(
+        internship_id=internship.id,
+        title=data.get("title"),
+        description=data.get("description"),
+        order=data.get("order", 0),
+        max_score=data.get("max_score", 100),
+        due_date=due_date,
+    )
+
+    db.session.add(task)
+    db.session.commit()
+
+    return jsonify({"message": "task created", "task": task.to_dict()}), 201
+
+
+@tasks_bp.post("/tasks/<int:task_id>/submit")
+@role_required("student")
+def submit_task(task_id):
+    task = Task.query.get_or_404(task_id)
+    data = request.get_json() or {}
+
+    student = Student.query.filter_by(
+        user_id=int(get_jwt_identity())
+    ).first()
+    if not student:
+        return jsonify({"error": "student profile not found"}), 404
+
+    from app.models import InternshipApplication
+    application = InternshipApplication.query.filter_by(
+        internship_id=task.internship_id,
+        student_id=student.id,
+    ).first()
+    if not application or application.status not in ("accepted", "completed"):
+        return jsonify({
+            "error": "Your application must be accepted before submitting tasks"
+        }), 403
+
+    submission = Submission(
+        task_id=task_id,
+        student_id=student.id,
+        content_url=data.get("content_url"),
+        submitted_at=datetime.utcnow(),
+    )
+
+    db.session.add(submission)
+    db.session.commit()
+
+    return jsonify({
+        "message": "submission received",
+        "submission": submission.to_dict(),
+    }), 201

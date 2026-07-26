@@ -1,42 +1,42 @@
-# SkillConnect Frontend (React)
+# SkillConnect Frontend
 
-Client for the Virtual Internship Platform. Provides the UI for students,
-mentors, employers, and admins to log in, browse/apply to internships, manage
-tasks and submissions, track progress, and view certificates.
+React and Vite client for SkillConnect.
 
-Not scaffolded yet. Suggested setup:
+## Setup and development
+
+The frontend expects the backend API on `http://127.0.0.1:8000`.
 
 ```bash
-cd frontend
-npm create vite@latest . -- --template react   # or: npx create-react-app .
-npm install
-npm install axios react-router-dom
+npm ci
+npm run dev
 ```
 
-## Suggested structure
+Open the URL printed by Vite, normally `http://localhost:5173`. Requests
+starting with `/api` are proxied to the backend.
 
-```
-frontend/
-├── public/
-├── src/
-│   ├── assets/
-│   ├── components/       # Reusable UI components (shared across pages)
-│   ├── pages/
-│   │   ├── auth/         # Login, register
-│   │   ├── student/      # Browse/apply internships, tasks, submissions, certificates
-│   │   ├── mentor/       # Review performance, assigned students
-│   │   ├── employer/     # Post internships, manage applicants
-│   │   └── admin/        # User management, platform stats
-│   ├── context/          # e.g. AuthContext for the logged-in user/JWT
-│   ├── services/         # API client (axios instance pointed at the Flask backend)
-│   ├── routes/           # App route definitions, role-protected routes
-│   ├── App.jsx
-│   └── main.jsx
-├── .env.example           # e.g. VITE_API_URL=http://localhost:5000/api
-└── package.json
+To use a different backend:
+
+```bash
+VITE_BACKEND_URL=http://localhost:9000 npm run dev
 ```
 
-## Backend
+## Build and verify
 
-The frontend talks to the Flask API in [`../backend`](../backend), served by
-default at `http://localhost:5000/api`.
+```bash
+npm run build
+npm run preview
+```
+
+`npm run build` is the current frontend verification command. There is not yet
+an automated component test suite.
+
+## Available scripts
+
+| Script | Purpose |
+| --- | --- |
+| `npm run dev` | Start Vite with hot module replacement |
+| `npm run build` | Create an optimized production build in `dist/` |
+| `npm run preview` | Serve the production build locally |
+
+See the repository-level `README.md` for backend setup, database migrations,
+tests, and production instructions.
