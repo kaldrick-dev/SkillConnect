@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { FiBell, FiBriefcase, FiCompass, FiGrid, FiLogOut, FiMenu, FiUser, FiX } from "react-icons/fi";
+import { FiBell, FiBriefcase, FiCompass, FiGrid, FiLogOut, FiMenu, FiShield, FiUser, FiUsers, FiX } from "react-icons/fi";
 import { useState } from "react";
 import Brand from "./Brand";
 import { useAuth } from "../context/AuthContext";
@@ -7,7 +7,10 @@ import { useAuth } from "../context/AuthContext";
 const labels = {
   "/dashboard": ["Overview", "Your workspace at a glance."],
   "/opportunities": ["Opportunities", "Find work that moves your skills forward."],
+  "/work": ["Project workspace", "Manage applications, tasks, submissions, and outcomes."],
+  "/directory": ["Community", "Mentors and companies on SkillConnect."],
   "/profile": ["Your profile", "Put your best work and experience forward."],
+  "/admin": ["Administration", "Monitor platform activity and user access."],
 };
 
 export default function AppShell() {
@@ -17,11 +20,33 @@ export default function AppShell() {
   const [title, subtitle] = labels[pathname] || labels["/dashboard"];
   const initials = user?.email?.slice(0, 2).toUpperCase() || "SC";
 
-  const nav = [
-    ["/dashboard", FiGrid, "Overview"],
-    ["/opportunities", FiCompass, "Explore"],
-    ["/profile", FiUser, "Profile"],
-  ];
+  const navByRole = {
+    student: [
+      ["/dashboard", FiGrid, "Overview"],
+      ["/opportunities", FiCompass, "Explore"],
+      ["/work", FiBriefcase, "My work"],
+      ["/directory", FiUsers, "Community"],
+      ["/profile", FiUser, "Profile"],
+    ],
+    employer: [
+      ["/dashboard", FiGrid, "Overview"],
+      ["/work", FiBriefcase, "Projects & talent"],
+      ["/directory", FiUsers, "Community"],
+      ["/profile", FiUser, "Company profile"],
+    ],
+    mentor: [
+      ["/dashboard", FiGrid, "Overview"],
+      ["/work", FiBriefcase, "Reviews"],
+      ["/directory", FiUsers, "Community"],
+      ["/profile", FiUser, "Profile"],
+    ],
+    admin: [
+      ["/dashboard", FiGrid, "Overview"],
+      ["/admin", FiShield, "Administration"],
+      ["/profile", FiUser, "Profile"],
+    ],
+  };
+  const nav = navByRole[user?.role] || navByRole.student;
 
   return (
     <div className="app-frame">
@@ -40,8 +65,8 @@ export default function AppShell() {
         </nav>
         <div className="sidebar-note">
           <FiBriefcase />
-          <strong>Build proof, not promises.</strong>
-          <p>Complete real project work and grow a portfolio employers can trust.</p>
+          <strong>{user?.role === "student" ? "Build proof, not promises." : "Make practical work count."}</strong>
+          <p>{user?.role === "student" ? "Complete real project work and grow a portfolio employers can trust." : "Create structure, give useful feedback, and recognise strong outcomes."}</p>
         </div>
         <button className="account-row" onClick={logout}>
           <span className="avatar">{initials}</span>

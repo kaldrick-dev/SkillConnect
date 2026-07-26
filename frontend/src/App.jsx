@@ -7,7 +7,11 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Explore from "./pages/Explore";
 import StudentProfile from "./pages/StudentProfile";
+import Workspace from "./pages/Workspace";
+import AdminPanel from "./pages/AdminPanel";
+import Directory from "./pages/Directory";
 import "./App.css";
+import "./workspace.css";
 
 function ProtectedRoute() {
   const { user, ready } = useAuth();
@@ -32,7 +36,10 @@ export default function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/opportunities" element={<Explore />} />
+          <Route path="/work" element={<Workspace />} />
+          <Route path="/directory" element={<Directory />} />
           <Route path="/profile" element={<StudentProfile />} />
+          <Route path="/admin" element={<AdminPanel />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { FiCheck, FiFileText, FiGlobe, FiPlus, FiSave, FiUser } from "react-icons/fi";
-import { profileApi } from "../api/client";
+import { employersApi, profileApi } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
 export default function StudentProfile() {
@@ -45,7 +45,8 @@ export default function StudentProfile() {
     }
   };
 
-  if (user.role !== "student") return <EmployerProfile user={user} />;
+  if (user.role === "employer") return <EmployerProfile user={user} updateUser={updateUser} />;
+  if (user.role !== "student") return <RoleProfile user={user} />;
 
   const skills = form.skills.split(",").map((skill) => skill.trim()).filter(Boolean);
   const initials = `${form.first_name?.[0] || ""}${form.last_name?.[0] || ""}` || user.email.slice(0, 2);
@@ -88,6 +89,65 @@ export default function StudentProfile() {
   );
 }
 
-function EmployerProfile({ user }) {
-  return <section className="panel empty-workspace"><span className="large-avatar">{user.email.slice(0, 2).toUpperCase()}</span><h2>{user.profile?.company_name || "Company profile"}</h2><p>Your employer account is connected. Company profile editing will be available as the employer workspace expands.</p></section>;
+function EmployerProfile({ user, updateUser }) {
+  const [form, setForm] = useState({
+    company_name: user.profile?.company_name || "",
+    contact_name: user.profile?.contact_name || "",
+    contact_email: user.profile?.contact_email || user.email,
+    website: user.profile?.website || "",
+  });
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const submit = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+    setMessage("");
+    try {
+      const data = await employersApi.update(user.id, form);
+      updateUser({ profile: data.profile });
+      setMessage("Company profile saved.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <form className="profile-layout" onSubmit={submit}>
+      <aside className="profile-sidebar panel">
+        <span className="large-avatar">{form.company_name.slice(0, 2).toUpperCase() || "CO"}</span>
+        <h2>{form.company_name || "Company profile"}</h2>
+        <p>{user.email}</p>
+        <div className="profile-divider" />
+        <span className="eyebrow">Employer account</span>
+        <p className="profile-helper">This information appears alongside your opportunities.</p>
+      </aside>
+      <div className="profile-sections">
+        {message && <div className={message.includes("saved") ? "success-alert" : "form-alert"}>{message}</div>}
+        <section className="panel profile-section">
+          <div className="profile-section-head"><span className="section-icon"><FiUser /></span><div><h2>Organisation details</h2><p>Help candidates understand who is behind the project.</p></div></div>
+          <label>Company name<input required value={form.company_name} onChange={(event) => setForm({ ...form, company_name: event.target.value })} /></label>
+          <div className="field-row">
+            <label>Contact name<input value={form.contact_name} onChange={(event) => setForm({ ...form, contact_name: event.target.value })} /></label>
+            <label>Contact email<input type="email" value={form.contact_email} onChange={(event) => setForm({ ...form, contact_email: event.target.value })} /></label>
+          </div>
+          <label>Website<span className="input-with-icon"><FiGlobe /><input type="url" value={form.website} onChange={(event) => setForm({ ...form, website: event.target.value })} placeholder="https://company.com" /></span></label>
+        </section>
+        <div className="profile-actions"><button className="button small" disabled={saving}>{saving ? "Saving…" : <><FiSave /> Save company profile</>}</button></div>
+      </div>
+    </form>
+  );
+}
+
+function RoleProfile({ user }) {
+  return (
+    <section className="panel empty-workspace">
+      <span className="large-avatar">{user.email.slice(0, 2).toUpperCase()}</span>
+      <h2>{user.role === "mentor" ? "Mentor profile" : "Administrator profile"}</h2>
+      <p>{user.email}</p>
+      {user.profile?.expertise && <div className="role-chip">{user.profile.expertise}</div>}
+    </section>
+  );
 }

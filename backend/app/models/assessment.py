@@ -16,7 +16,7 @@ class Assessment(db.Model):
         nullable=False,
     )
     mentor_id = db.Column(
-        db.BigInteger,
+        db.BigInteger().with_variant(db.Integer, "sqlite"),
         db.ForeignKey("MENTOR.mentorId", ondelete="CASCADE"),
         nullable=False,
     )

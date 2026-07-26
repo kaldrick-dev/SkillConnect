@@ -8,6 +8,10 @@ from app.models import *  # noqa: F401,F403
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+    if str(app.config["SQLALCHEMY_DATABASE_URI"]).startswith("sqlite"):
+        # Test suites replace the production URI with SQLite at runtime;
+        # QueuePool options are not valid for SQLite's in-memory pool.
+        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {}
 
     db.init_app(app)
     migrate.init_app(app, db)

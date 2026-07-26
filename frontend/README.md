@@ -1,16 +1,42 @@
-# React + Vite
+# SkillConnect Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React and Vite client for SkillConnect.
 
-Currently, two official plugins are available:
+## Setup and development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+The frontend expects the backend API on `http://127.0.0.1:8000`.
 
-## React Compiler
+```bash
+npm ci
+npm run dev
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Open the URL printed by Vite, normally `http://localhost:5173`. Requests
+starting with `/api` are proxied to the backend.
 
-## Expanding the Oxlint configuration
+To use a different backend:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+```bash
+VITE_BACKEND_URL=http://localhost:9000 npm run dev
+```
+
+## Build and verify
+
+```bash
+npm run build
+npm run preview
+```
+
+`npm run build` is the current frontend verification command. There is not yet
+an automated component test suite.
+
+## Available scripts
+
+| Script | Purpose |
+| --- | --- |
+| `npm run dev` | Start Vite with hot module replacement |
+| `npm run build` | Create an optimized production build in `dist/` |
+| `npm run preview` | Serve the production build locally |
+
+See the repository-level `README.md` for backend setup, database migrations,
+tests, and production instructions.

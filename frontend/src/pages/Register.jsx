@@ -1,13 +1,13 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FiArrowLeft, FiArrowRight, FiBriefcase, FiCheck, FiEye, FiEyeOff, FiUser } from "react-icons/fi";
+import { FiArrowLeft, FiArrowRight, FiBriefcase, FiCheck, FiEye, FiEyeOff, FiUser, FiUsers } from "react-icons/fi";
 import Brand from "../components/Brand";
 import { useAuth } from "../context/AuthContext";
 
 export default function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ first_name: "", last_name: "", email: "", password: "", role: "student", university: "", company_name: "" });
+  const [form, setForm] = useState({ first_name: "", last_name: "", email: "", password: "", role: "student", university: "", company_name: "", expertise: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -44,13 +44,18 @@ export default function Register() {
               <legend>I want to</legend>
               <button type="button" className={form.role === "student" ? "selected" : ""} onClick={() => setForm({ ...form, role: "student" })}><FiUser /><span><strong>Build experience</strong><small>Join as talent</small></span>{form.role === "student" && <FiCheck />}</button>
               <button type="button" className={form.role === "employer" ? "selected" : ""} onClick={() => setForm({ ...form, role: "employer" })}><FiBriefcase /><span><strong>Host projects</strong><small>Join as an employer</small></span>{form.role === "employer" && <FiCheck />}</button>
+              <button type="button" className={form.role === "mentor" ? "selected" : ""} onClick={() => setForm({ ...form, role: "mentor" })}><FiUsers /><span><strong>Guide talent</strong><small>Join as a mentor</small></span>{form.role === "mentor" && <FiCheck />}</button>
             </fieldset>
             {form.role === "student" ? (
               <div className="field-row">
                 <label>First name<input required name="first_name" placeholder="Aline" value={form.first_name} onChange={change} /></label>
                 <label>Last name<input required name="last_name" placeholder="Mutesi" value={form.last_name} onChange={change} /></label>
               </div>
-            ) : <label>Company name<input required name="company_name" placeholder="Your organisation" value={form.company_name} onChange={change} /></label>}
+            ) : form.role === "employer" ? (
+              <label>Company name<input required name="company_name" placeholder="Your organisation" value={form.company_name} onChange={change} /></label>
+            ) : (
+              <label>Area of expertise<input required name="expertise" placeholder="e.g. Software engineering" value={form.expertise} onChange={change} /></label>
+            )}
             <label>Email address<input required name="email" type="email" autoComplete="email" placeholder="you@example.com" value={form.email} onChange={change} /></label>
             <label>Password
               <span className="password-field">

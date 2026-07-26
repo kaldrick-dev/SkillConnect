@@ -20,10 +20,22 @@ def list_tasks(internship_id):
 @role_required("employer")
 def create_task(internship_id):
     internship = Internship.query.get_or_404(internship_id)
+    employer = internship.employer
+    if not employer or employer.user_id != int(get_jwt_identity()):
+        return jsonify({"error": "You can only manage your own internships"}), 403
     data = request.get_json() or {}
 
     if not data.get("title"):
         return jsonify({"error": "title is required"}), 400
+
+    due_date = data.get("due_date")
+    if due_date:
+        try:
+            due_date = datetime.fromisoformat(
+                str(due_date).replace("Z", "+00:00")
+            )
+        except ValueError:
+            return jsonify({"error": "due_date must be a valid ISO date"}), 400
 
     task = Task(
         internship_id=internship.id,
@@ -31,7 +43,7 @@ def create_task(internship_id):
         description=data.get("description"),
         order=data.get("order", 0),
         max_score=data.get("max_score", 100),
-        due_date=data.get("due_date"),
+        due_date=due_date,
     )
 
     db.session.add(task)
@@ -43,7 +55,7 @@ def create_task(internship_id):
 @tasks_bp.post("/tasks/<int:task_id>/submit")
 @role_required("student")
 def submit_task(task_id):
-    Task.query.get_or_404(task_id)
+    task = Task.query.get_or_404(task_id)
     data = request.get_json() or {}
 
     student = Student.query.filter_by(
@@ -51,6 +63,16 @@ def submit_task(task_id):
     ).first()
     if not student:
         return jsonify({"error": "student profile not found"}), 404
+
+    from app.models import InternshipApplication
+    application = InternshipApplication.query.filter_by(
+        internship_id=task.internship_id,
+        student_id=student.id,
+    ).first()
+    if not application or application.status not in ("accepted", "completed"):
+        return jsonify({
+            "error": "Your application must be accepted before submitting tasks"
+        }), 403
 
     submission = Submission(
         task_id=task_id,

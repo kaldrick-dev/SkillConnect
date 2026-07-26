@@ -46,7 +46,7 @@ paths:
                   type: string
                 role:
                   type: string
-                  enum: [student, employer, mentor, admin]
+                  enum: [student, employer, mentor]
       responses:
         "201":
           description: User registered
@@ -250,6 +250,80 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /api/applications/mine:
+    get:
+      tags: [Internships]
+      summary: List the signed-in student's applications
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Applications with internship details
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/internships/{internship_id}/applications:
+    get:
+      tags: [Internships]
+      summary: List applications for an internship
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/InternshipId"
+      responses:
+        "200":
+          description: Applications with student profiles
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/internships/{internship_id}/workspace:
+    get:
+      tags: [Internships]
+      summary: Load applications, tasks, and submissions in one request
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/InternshipId"
+      responses:
+        "200":
+          description: Aggregated project workspace
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/applications/{application_id}:
+    put:
+      tags: [Internships]
+      summary: Update an application status
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: application_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Application updated
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   /api/internships/{internship_id}/certificate:
     post:
       tags: [Certificates]
@@ -370,6 +444,8 @@ paths:
     get:
       tags: [Submissions]
       summary: List submissions for a task
+      security:
+        - bearerAuth: []
       parameters:
         - name: task_id
           in: path
@@ -607,6 +683,20 @@ paths:
       responses:
         "200":
           description: Platform statistics
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/admin/overview:
+    get:
+      tags: [Admin]
+      summary: Load platform statistics and users together
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Combined administration overview
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":

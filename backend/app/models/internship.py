@@ -35,6 +35,11 @@ class Internship(db.Model):
         back_populates="internship",
         cascade="all, delete-orphan",
     )
+    applications = db.relationship(
+        "InternshipApplication",
+        back_populates="internship",
+        cascade="all, delete-orphan",
+    )
     certificates = db.relationship(
         "Certificate",
         back_populates="internship",
@@ -55,6 +60,16 @@ class Internship(db.Model):
             "published_at": self.published_at.isoformat() if self.published_at else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "company_name": (
+                self.employer.company_name
+                if self.employer
+                else None
+            ),
+            "employer_user_id": (
+                self.employer.user_id
+                if self.employer
+                else None
+            ),
         }
 
     def __repr__(self) -> str:

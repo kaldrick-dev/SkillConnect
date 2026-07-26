@@ -52,6 +52,26 @@ export const internshipsApi = {
     method: "POST",
     body: JSON.stringify(details),
   }),
+  get: (id) => api(`/internships/${id}`),
+  update: (id, details) => api(`/internships/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(details),
+  }),
+  myApplications: () => api("/applications/mine"),
+  applications: (id) => api(`/internships/${id}/applications`),
+  workspace: (id) => api(`/internships/${id}/workspace`),
+  updateApplication: (id, status) => api(`/applications/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ status }),
+  }),
+  assess: (id, details) => api(`/internships/${id}/assess`, {
+    method: "POST",
+    body: JSON.stringify(details),
+  }),
+  certificate: (id, studentId) => api(`/internships/${id}/certificate`, {
+    method: "POST",
+    body: JSON.stringify({ student_id: studentId }),
+  }),
 };
 
 export const profileApi = {
@@ -59,5 +79,54 @@ export const profileApi = {
   update: (id, details) => api(`/students/${id}`, {
     method: "PUT",
     body: JSON.stringify(details),
+  }),
+};
+
+export const employersApi = {
+  list: () => api("/employers/"),
+  get: (userId) => api(`/employers/${userId}`),
+  internships: (userId) => api(`/employers/${userId}/internships`),
+  update: (userId, details) => api(`/employers/${userId}`, {
+    method: "PUT",
+    body: JSON.stringify(details),
+  }),
+};
+
+export const mentorsApi = {
+  list: () => api("/mentors/"),
+  students: (mentorId) => api(`/mentors/${mentorId}/students`),
+};
+
+export const tasksApi = {
+  list: (internshipId) => api(`/internships/${internshipId}/tasks`),
+  create: (internshipId, details) => api(`/internships/${internshipId}/tasks`, {
+    method: "POST",
+    body: JSON.stringify(details),
+  }),
+  submit: (taskId, contentUrl) => api(`/tasks/${taskId}/submit`, {
+    method: "POST",
+    body: JSON.stringify({ content_url: contentUrl }),
+  }),
+};
+
+export const submissionsApi = {
+  mine: () => api("/submissions/mine"),
+  forTask: (taskId) => api(`/submissions/task/${taskId}`),
+  review: (submissionId, details) => api(`/submissions/${submissionId}/review`, {
+    method: "PUT",
+    body: JSON.stringify(details),
+  }),
+};
+
+export const certificatesApi = {
+  forStudent: (studentId) => api(`/certificates/student/${studentId}`),
+};
+
+export const adminApi = {
+  overview: () => api("/admin/overview"),
+  stats: () => api("/admin/stats"),
+  users: () => api("/admin/users"),
+  deactivate: (userId) => api(`/admin/users/${userId}`, {
+    method: "DELETE",
   }),
 };

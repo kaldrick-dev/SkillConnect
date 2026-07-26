@@ -29,6 +29,12 @@ class InternshipApplication(db.Model):
         server_default=db.func.now(),
     )
 
+    internship = db.relationship(
+        "Internship",
+        back_populates="applications",
+    )
+    student = db.relationship("Student")
+
     def to_dict(self):
         return {
             "id": self.id,

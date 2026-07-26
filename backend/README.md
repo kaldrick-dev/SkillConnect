@@ -29,6 +29,7 @@ backend/
 ├── tests/                 # Pytest test suite
 ├── .env.example           # Copy to .env and fill in secrets/DB connection
 ├── requirements.txt
+├── requirements-dev.txt
 └── run.py                 # Entrypoint
 ```
 
@@ -45,20 +46,38 @@ cp .env.example .env          # then edit values, e.g. DATABASE_URL
 ## Database
 
 ```bash
-flask db init       # first time only
-flask db migrate -m "initial schema"
-flask db upgrade
+flask --app run.py db upgrade
 ```
 
 ## Run
 
 ```bash
-flask run
-# or
 python run.py
 ```
 
-API is served under `/api`, e.g. `GET /api/health`.
+This starts gunicorn programmatically with reload-on-change enabled, so it
+behaves like a dev server while still running the same WSGI stack as
+production. It serves the API on port `8000` by default and uses the `PORT`
+environment variable when it is set. The API is available under `/api`, e.g.
+`GET /api/health`.
+
+To run gunicorn directly instead (e.g. for a process manager or `Procfile`):
+
+```bash
+gunicorn --bind 0.0.0.0:${PORT:-8000} run:app
+```
+
+## Test
+
+Install the test dependency and run the suite:
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest -q
+```
+
+Tests use an isolated in-memory SQLite database and do not modify the database
+configured in `.env`.
 
 ## Tech stack
 
@@ -67,6 +86,7 @@ API is served under `/api`, e.g. `GET /api/health`.
 - Flask-Migrate — schema migrations
 - Flask-JWT-Extended — authentication
 - Flask-Cors — cross-origin requests from the React frontend
+- Gunicorn — production WSGI server
 - MySQL (via PyMySQL) — primary datastore
 
 See Chapter 3.5 of the project proposal for the full tooling rationale.

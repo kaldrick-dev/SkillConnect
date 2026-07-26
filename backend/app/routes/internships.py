@@ -1,5 +1,7 @@
 from flask import Blueprint, jsonify, request
-from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import get_jwt, get_jwt_identity
+from sqlalchemy import or_
+from sqlalchemy.orm import joinedload
 
 from app.extensions import db
 from app.models import (
@@ -10,6 +12,7 @@ from app.models import (
     InternshipApplication,
     Mentor,
     Student,
+    Task,
 )
 from app.utils import role_required
 
@@ -18,38 +21,37 @@ internships_bp = Blueprint("internships", __name__)
 
 @internships_bp.get("/internships")
 def list_internships():
-    internships = Internship.query.all()
+    query = Internship.query.options(
+        joinedload(Internship.employer)
+    )
     search = request.args.get("search", "").strip()
     location = request.args.get("location", "").strip()
     is_active = request.args.get("is_active")
 
     if search:
-        search = search.lower()
-        internships = [
-            internship for internship in internships
-            if search in internship.title.lower()
-            or search in (internship.description or "").lower()
-        ]
+        term = f"%{search}%"
+        query = query.filter(or_(
+            Internship.title.ilike(term),
+            Internship.description.ilike(term),
+        ))
 
     if location:
-        location = location.lower()
-        internships = [
-            internship for internship in internships
-            if location in (internship.location or "").lower()
-        ]
+        query = query.filter(
+            Internship.location.ilike(f"%{location}%")
+        )
 
     if is_active == "true":
-        internships = [
-            internship for internship in internships
-            if internship.is_active
-        ]
+        query = query.filter(Internship.is_active.is_(True))
     elif is_active == "false":
-        internships = [
-            internship for internship in internships
-            if not internship.is_active
-        ]
+        query = query.filter(Internship.is_active.is_(False))
 
-    return jsonify([internship.to_dict() for internship in internships]), 200
+    internships = query.order_by(Internship.created_at.desc()).all()
+    response = jsonify([
+        internship.to_dict()
+        for internship in internships
+    ])
+    response.headers["Cache-Control"] = "public, max-age=30"
+    return response, 200
 
 
 @internships_bp.post("/internships")
@@ -98,6 +100,11 @@ def update_internship(internship_id):
     internship = Internship.query.get(internship_id)
     if not internship:
         return jsonify({"error": "internship not found"}), 404
+    employer = Employer.query.filter_by(
+        user_id=int(get_jwt_identity())
+    ).first()
+    if not employer or internship.employer_id != employer.id:
+        return jsonify({"error": "You can only update your own internships"}), 403
 
     data = request.get_json() or {}
     if "title" in data:
@@ -152,6 +159,137 @@ def apply_to_internship(internship_id):
         "message": "application submitted",
         "application": application.to_dict(),
     }), 201
+
+
+@internships_bp.get("/applications/mine")
+@role_required("student")
+def list_my_applications():
+    applications = InternshipApplication.query.options(
+        joinedload(InternshipApplication.student).joinedload(Student.user),
+        joinedload(InternshipApplication.internship).joinedload(
+            Internship.employer
+        ),
+        joinedload(InternshipApplication.internship)
+        .joinedload(Internship.tasks)
+        .joinedload(Task.submissions),
+    ).filter(
+        InternshipApplication.student.has(
+            user_id=int(get_jwt_identity())
+        )
+    ).all()
+    return jsonify([
+        serialize_application(application, include_work=True)
+        for application in applications
+    ]), 200
+
+
+@internships_bp.get(
+    "/internships/<int:internship_id>/applications"
+)
+@role_required("employer", "mentor", "admin")
+def list_internship_applications(internship_id):
+    internship = db.session.get(Internship, internship_id)
+    if not internship:
+        return jsonify({"error": "internship not found"}), 404
+
+    if get_jwt().get("role") == "employer":
+        employer = Employer.query.filter_by(
+            user_id=int(get_jwt_identity())
+        ).first()
+        if not employer or internship.employer_id != employer.id:
+            return jsonify({
+                "error": "You can only view your own internship applications"
+            }), 403
+
+    applications = InternshipApplication.query.options(
+        joinedload(InternshipApplication.student).joinedload(Student.user),
+        joinedload(InternshipApplication.internship).joinedload(
+            Internship.employer
+        ),
+    ).filter_by(internship_id=internship.id).all()
+    return jsonify([
+        serialize_application(application)
+        for application in applications
+    ]), 200
+
+
+@internships_bp.get(
+    "/internships/<int:internship_id>/workspace"
+)
+@role_required("employer", "mentor", "admin")
+def internship_workspace(internship_id):
+    internship = Internship.query.options(
+        joinedload(Internship.employer),
+        joinedload(Internship.applications)
+        .joinedload(InternshipApplication.student)
+        .joinedload(Student.user),
+        joinedload(Internship.tasks).joinedload(Task.submissions),
+    ).filter_by(id=internship_id).first()
+    if not internship:
+        return jsonify({"error": "internship not found"}), 404
+
+    if (
+        get_jwt().get("role") == "employer"
+        and internship.employer.user_id != int(get_jwt_identity())
+    ):
+        return jsonify({
+            "error": "You can only view your own project workspace"
+        }), 403
+
+    return jsonify({
+        "internship": internship.to_dict(),
+        "applications": [
+            serialize_application(application)
+            for application in internship.applications
+        ],
+        "tasks": [
+            {
+                **task.to_dict(),
+                "submissions": [
+                    submission.to_dict()
+                    for submission in task.submissions
+                ],
+            }
+            for task in sorted(
+                internship.tasks,
+                key=lambda item: (item.order, item.id),
+            )
+        ],
+    }), 200
+
+
+@internships_bp.put("/applications/<int:application_id>")
+@role_required("employer", "admin")
+def update_application(application_id):
+    application = db.session.get(InternshipApplication, application_id)
+    if not application:
+        return jsonify({"error": "application not found"}), 404
+
+    internship = db.session.get(Internship, application.internship_id)
+    if get_jwt().get("role") == "employer":
+        employer = Employer.query.filter_by(
+            user_id=int(get_jwt_identity())
+        ).first()
+        if not employer or internship.employer_id != employer.id:
+            return jsonify({
+                "error": "You can only manage your own applications"
+            }), 403
+
+    status = (request.get_json() or {}).get("status")
+    allowed_statuses = {"applied", "accepted", "rejected", "completed"}
+    if status not in allowed_statuses:
+        return jsonify({
+            "error": (
+                "status must be applied, accepted, rejected, or completed"
+            )
+        }), 400
+
+    application.status = status
+    db.session.commit()
+    return jsonify({
+        "message": "application updated",
+        "application": serialize_application(application),
+    }), 200
 
 
 @internships_bp.post("/internships/<int:internship_id>/assess")
@@ -219,6 +357,14 @@ def generate_certificate(internship_id):
     internship = db.session.get(Internship, internship_id)
     if not internship:
         return jsonify({"error": "internship not found"}), 404
+    if get_jwt().get("role") == "employer":
+        employer = Employer.query.filter_by(
+            user_id=int(get_jwt_identity())
+        ).first()
+        if not employer or internship.employer_id != employer.id:
+            return jsonify({
+                "error": "You can only issue certificates for your internships"
+            }), 403
 
     data = request.get_json() or {}
     student_id = data.get("student_id")
@@ -259,3 +405,36 @@ def generate_certificate(internship_id):
         "message": "certificate generated",
         "certificate": certificate.to_dict(),
     }), 201
+
+
+def serialize_application(application, include_work=False):
+    internship = application.internship
+    student = application.student
+    data = {
+        **application.to_dict(),
+        "internship": internship.to_dict() if internship else None,
+        "student": (
+            {
+                **student.to_dict(),
+                "email": student.user.email if student.user else None,
+            }
+            if student
+            else None
+        ),
+    }
+    if include_work and internship:
+        data["tasks"] = [
+            {
+                **task.to_dict(),
+                "submissions": [
+                    submission.to_dict()
+                    for submission in task.submissions
+                    if submission.student_id == application.student_id
+                ],
+            }
+            for task in sorted(
+                internship.tasks,
+                key=lambda item: (item.order, item.id),
+            )
+        ]
+    return data

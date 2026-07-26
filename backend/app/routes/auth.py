@@ -18,7 +18,7 @@ def register():
         if field not in data:
             return jsonify({"error": f"{field} is required"}), 400
 
-    if data["role"] not in ("student", "employer", "mentor", "admin"):
+    if data["role"] not in ("student", "employer", "mentor"):
         return jsonify({"error": "Invalid role"}), 400
 
     email = str(data["email"]).strip().lower()
@@ -104,4 +104,7 @@ def serialize_user(user):
         data["profile"] = user.student.to_dict()
     elif user.role == "employer" and user.employer:
         data["profile"] = user.employer.to_dict()
+    elif user.role == "mentor":
+        mentor = Mentor.query.filter_by(userId=user.id).first()
+        data["profile"] = mentor.to_dict() if mentor else None
     return data
