@@ -21,7 +21,12 @@ class User(db.Model):
     employer = db.relationship("Employer", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
     def set_password(self, raw: str) -> None:
-        self.password_hash = generate_password_hash(raw)
+        # PBKDF2 works across every supported Python/OpenSSL combination,
+        # including development environments where hashlib.scrypt is absent.
+        self.password_hash = generate_password_hash(
+            raw,
+            method="pbkdf2:sha256:600000",
+        )
 
     def check_password(self, raw: str) -> bool:
         return check_password_hash(self.password_hash, raw)

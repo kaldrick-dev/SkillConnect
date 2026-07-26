@@ -8,7 +8,7 @@ class Mentor(db.Model):
 
     mentorId = db.Column(db.BigInteger, primary_key=True, autoincrement=True, nullable=False)
     userId = db.Column(
-        db.BigInteger,
+        db.Integer,
         db.ForeignKey("users.id", ondelete="CASCADE", onupdate="CASCADE"),
         nullable=False,
         unique=True,
