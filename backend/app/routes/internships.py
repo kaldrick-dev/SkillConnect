@@ -86,7 +86,7 @@ def create_internship():
 
 @internships_bp.get("/internships/<int:internship_id>")
 def get_internship(internship_id):
-    internship = Internship.query.get(internship_id)
+    internship = db.session.get(Internship, internship_id)
     if not internship:
         return jsonify({"error": "internship not found"}), 404
     return jsonify(internship.to_dict()), 200
@@ -119,7 +119,7 @@ def update_internship(internship_id):
 @internships_bp.post("/internships/<int:internship_id>/apply")
 @role_required("student")
 def apply_to_internship(internship_id):
-    internship = Internship.query.get(internship_id)
+    internship = db.session.get(Internship, internship_id)
     if not internship:
         return jsonify({"error": "internship not found"}), 404
     if not internship.is_active:
@@ -157,7 +157,7 @@ def apply_to_internship(internship_id):
 @internships_bp.post("/internships/<int:internship_id>/assess")
 @role_required("mentor")
 def assess_student(internship_id):
-    internship = Internship.query.get(internship_id)
+    internship = db.session.get(Internship, internship_id)
     if not internship:
         return jsonify({"error": "internship not found"}), 404
 
@@ -216,7 +216,7 @@ def assess_student(internship_id):
 @internships_bp.post("/internships/<int:internship_id>/certificate")
 @role_required("employer", "admin")
 def generate_certificate(internship_id):
-    internship = Internship.query.get(internship_id)
+    internship = db.session.get(Internship, internship_id)
     if not internship:
         return jsonify({"error": "internship not found"}), 404
 

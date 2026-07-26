@@ -33,7 +33,7 @@ def authorization_header(app, role):
     [
         ("PUT", "/api/students/1", "mentor"),
         ("PUT", "/api/employers/1", "student"),
-        ("POST", "/api/internships/", "student"),
+        ("POST", "/api/internships", "student"),
         ("PUT", "/api/internships/1", "student"),
         ("POST", "/api/internships/1/apply", "employer"),
         ("POST", "/api/internships/1/assess", "student"),
