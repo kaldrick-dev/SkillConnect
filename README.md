@@ -3,6 +3,9 @@
 SkillConnect is a virtual internship platform where students complete practical
 company projects, employers manage opportunities and submissions, mentors give
 feedback, and administrators monitor the platform.
+## Demo Video
+
+https://youtu.be/RowoXTLyiCc
 
 ## Project structure
 
@@ -27,6 +30,13 @@ run the automated test suite.
 
 The backend and frontend run as separate processes. Open two terminals from the
 repository root.
+
+Admin Account
+
+Email: admin.demo@skillconnect.test
+Password: Demo_Admin@2026
+Role: admin
+Admin portal: /admin
 
 ### 1. Configure and run the backend
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { FiActivity, FiBriefcase, FiSearch, FiShield, FiUserCheck, FiUsers, FiUserX } from "react-icons/fi";
 import { adminApi } from "../api/client";
 import { useAuth } from "../context/AuthContext";
+import PageLoader from "../components/PageLoader";
 
 export default function AdminPanel() {
   const { user } = useAuth();
@@ -10,6 +11,8 @@ export default function AdminPanel() {
   const [query, setQuery] = useState("");
   const [role, setRole] = useState("all");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [updatingUserId, setUpdatingUserId] = useState(null);
 
   const load = async () => {
     try {
@@ -18,6 +21,8 @@ export default function AdminPanel() {
       setUsers(data.users);
     } catch (error) {
       setMessage(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -29,17 +34,30 @@ export default function AdminPanel() {
     return <section className="panel empty-workspace"><FiShield /><h2>Administrator access only</h2><p>This workspace is restricted to platform administrators.</p></section>;
   }
 
-  const deactivate = async (target) => {
-    if (target.id === user.id) {
+  if (loading) return <PageLoader label="Loading platform activity…" />;
+
+  const updateAccountStatus = async (target) => {
+    if (target.id === user.id && target.is_active) {
       setMessage("You cannot deactivate the account you are currently using.");
       return;
     }
+
+    const activating = !target.is_active;
+    setUpdatingUserId(target.id);
     try {
-      await adminApi.deactivate(target.id);
-      setUsers((current) => current.map((item) => item.id === target.id ? { ...item, is_active: false } : item));
-      setMessage(`${target.email} was deactivated.`);
+      if (activating) {
+        await adminApi.reactivate(target.id);
+      } else {
+        await adminApi.deactivate(target.id);
+      }
+      setUsers((current) => current.map((item) => (
+        item.id === target.id ? { ...item, is_active: activating } : item
+      )));
+      setMessage(`${target.email} was ${activating ? "reactivated" : "deactivated"}.`);
     } catch (error) {
       setMessage(error.message);
+    } finally {
+      setUpdatingUserId(null);
     }
   };
 
@@ -81,7 +99,7 @@ export default function AdminPanel() {
                 <td data-label="Role"><span className={`role-chip ${item.role}`}>{item.role}</span></td>
                 <td data-label="Status"><span className={`account-status ${item.is_active ? "active" : ""}`}><i />{item.is_active ? "Active" : "Inactive"}</span></td>
                 <td data-label="Joined"><span className="date-cell">{item.created_at ? new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(item.created_at)) : "—"}</span></td>
-                <td data-label="Action"><button className="table-action" disabled={!item.is_active || item.id === user.id} onClick={() => deactivate(item)}><FiUserX />{item.id === user.id ? "Current account" : item.is_active ? "Deactivate" : "Deactivated"}</button></td>
+                <td data-label="Action"><button className={`table-action ${!item.is_active ? "reactivate" : ""}`} disabled={item.id === user.id || updatingUserId === item.id} onClick={() => updateAccountStatus(item)}>{item.is_active ? <FiUserX /> : <FiUserCheck />}{item.id === user.id ? "Current account" : updatingUserId === item.id ? "Updating…" : item.is_active ? "Deactivate" : "Reactivate"}</button></td>
               </tr>
             ))}{!filtered.length && <tr className="empty-table-row"><td colSpan="5"><FiSearch /><strong>No users found</strong><span>Try a different search or role filter.</span></td></tr>}</tbody>
           </table>

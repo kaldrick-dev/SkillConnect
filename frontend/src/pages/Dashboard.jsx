@@ -1,16 +1,32 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FiArrowRight, FiAward, FiBookOpen, FiBriefcase, FiCheckCircle, FiClock, FiCompass, FiTrendingUp } from "react-icons/fi";
-import { adminApi, certificatesApi, internshipsApi, submissionsApi } from "../api/client";
+import { adminApi, certificatesApi, internshipsApi, profileApi, submissionsApi } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import OpportunityCard from "../components/OpportunityCard";
+import PageLoader from "../components/PageLoader";
+import { getProfileProgress } from "../utils/profileProgress";
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [opportunities, setOpportunities] = useState([]);
   const [metrics, setMetrics] = useState({ applications: 0, tasks: 0, submissions: 0, certificates: 0 });
   const [loading, setLoading] = useState(true);
   const name = user?.profile?.first_name || user?.email?.split("@")[0] || "there";
+  const profileProgress = getProfileProgress(user?.profile);
+  const journeyCompleted = 1
+    + (profileProgress.isComplete ? 1 : 0)
+    + (metrics.applications > 0 ? 1 : 0);
+
+  useEffect(() => {
+    if (user?.role !== "student" || !user?.id) return;
+    profileApi.get(user.id)
+      .then((data) => updateUser({
+        email: data.email,
+        profile: data.profile || {},
+      }))
+      .catch(() => {});
+  }, [user?.id, user?.role]);
 
   useEffect(() => {
     internshipsApi.list({ is_active: true })
@@ -39,7 +55,7 @@ export default function Dashboard() {
     }).catch(() => {});
   }, [user?.role, user?.profile?.id]);
 
-  if (user?.role === "employer") return <EmployerDashboard user={user} opportunities={opportunities} setOpportunities={setOpportunities} />;
+  if (user?.role === "employer") return <EmployerDashboard user={user} opportunities={opportunities} setOpportunities={setOpportunities} loading={loading} />;
   if (user?.role === "mentor") return <MentorDashboard user={user} opportunities={opportunities} />;
   if (user?.role === "admin") return <AdminDashboard user={user} />;
 
@@ -54,24 +70,24 @@ export default function Dashboard() {
         <article><span className="stat-icon blue"><FiBriefcase /></span><div><small>Assigned tasks</small><strong>{metrics.tasks}</strong><p><Link to="/work">View tasks · {metrics.applications} applications</Link></p></div></article>
         <article><span className="stat-icon green"><FiCheckCircle /></span><div><small>Submissions</small><strong>{metrics.submissions}</strong><p>Work shared for review</p></div></article>
         <article><span className="stat-icon amber"><FiAward /></span><div><small>Certificates</small><strong>{metrics.certificates}</strong><p>Earned through real work</p></div></article>
-        <article><span className="stat-icon plum"><FiTrendingUp /></span><div><small>Profile strength</small><strong>{user?.profile?.bio ? "70%" : "35%"}</strong><p><Link to="/profile">Complete profile</Link></p></div></article>
+        <article><span className="stat-icon plum"><FiTrendingUp /></span><div><small>Profile strength</small><strong>{profileProgress.score}%</strong><p><Link to="/profile">{profileProgress.isComplete ? "Review profile" : "Complete profile"}</Link></p></div></article>
       </section>
 
       <section className="dashboard-grid">
         <div className="panel getting-started">
-          <div className="panel-heading"><div><span className="eyebrow">Your next move</span><h2>Start building your track record</h2></div><span className="completion-ring">1/3</span></div>
+          <div className="panel-heading"><div><span className="eyebrow">Your next move</span><h2>Start building your track record</h2></div><span className="completion-ring">{journeyCompleted}/3</span></div>
           <div className="checklist">
             <Link to="/profile" className="done"><span><FiCheckCircle /></span><div><strong>Create your account</strong><p>Your workspace is ready.</p></div></Link>
-            <Link to="/profile"><span>02</span><div><strong>Complete your profile</strong><p>Add your skills, education, and a short introduction.</p></div><FiArrowRight /></Link>
-            <Link to="/opportunities"><span>03</span><div><strong>Apply to your first project</strong><p>Choose work that matches where you want to grow.</p></div><FiArrowRight /></Link>
+            <Link to="/profile" className={profileProgress.isComplete ? "done" : ""}><span>{profileProgress.isComplete ? <FiCheckCircle /> : "02"}</span><div><strong>Complete your profile</strong><p>{profileProgress.isComplete ? "Your profile is complete and ready to share." : `${profileProgress.completed} of ${profileProgress.total} details added.`}</p></div>{!profileProgress.isComplete && <FiArrowRight />}</Link>
+            <Link to="/opportunities" className={metrics.applications > 0 ? "done" : ""}><span>{metrics.applications > 0 ? <FiCheckCircle /> : "03"}</span><div><strong>Apply to your first project</strong><p>{metrics.applications > 0 ? `You have ${metrics.applications} application${metrics.applications === 1 ? "" : "s"} in progress.` : "Choose work that matches where you want to grow."}</p></div>{metrics.applications === 0 && <FiArrowRight />}</Link>
           </div>
         </div>
         <aside className="panel profile-card">
           <span className="eyebrow">Profile strength</span>
-          <div className="profile-score"><strong>{user?.profile?.bio ? "70" : "35"}<small>%</small></strong><span><i style={{ "--score": user?.profile?.bio ? "70%" : "35%" }} /></span></div>
-          <h3>A few details will make you stand out.</h3>
-          <p>Profiles with skills and a short introduction are more likely to be shortlisted.</p>
-          <Link className="secondary-button" to="/profile">Improve my profile <FiArrowRight /></Link>
+          <div className="profile-score"><strong>{profileProgress.score}<small>%</small></strong><span><i style={{ "--score": `${profileProgress.score}%` }} /></span></div>
+          <h3>{profileProgress.isComplete ? "Your profile is ready to stand out." : "A few details will make you stand out."}</h3>
+          <p>{profileProgress.isComplete ? "Keep your information current as your experience grows." : `Next, add ${profileProgress.nextLabel}. Profiles with complete details are easier to shortlist.`}</p>
+          <Link className="secondary-button" to="/profile">{profileProgress.isComplete ? "Review my profile" : "Continue my profile"} <FiArrowRight /></Link>
         </aside>
       </section>
 
@@ -127,7 +143,7 @@ function AdminDashboard({ user }) {
   );
 }
 
-function EmployerDashboard({ user, opportunities, setOpportunities }) {
+function EmployerDashboard({ user, opportunities, setOpportunities, loading }) {
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -185,7 +201,9 @@ function EmployerDashboard({ user, opportunities, setOpportunities }) {
         <article><span className="stat-icon amber"><FiBookOpen /></span><div><small>Active learners</small><strong>{metrics.learners}</strong><p>Currently in projects</p></div></article>
         <article><span className="stat-icon plum"><FiClock /></span><div><small>Awaiting review</small><strong>{metrics.awaitingReview}</strong><p>Submissions to assess</p></div></article>
       </section>
-      {opportunities.length ? (
+      {loading ? (
+        <PageLoader label="Loading your opportunities…" />
+      ) : opportunities.length ? (
         <section className="recommended"><div className="section-row"><div><span className="eyebrow">Your live work</span><h2>Published opportunities</h2></div></div><div className="opportunity-grid">{opportunities.map((item) => <OpportunityCard key={item.id} internship={item} compact />)}</div></section>
       ) : (
         <section className="panel empty-workspace"><FiBriefcase /><h2>Build your first opportunity</h2><p>Define a focused project with clear outcomes. SkillConnect will help early-career talent do meaningful work with your team.</p><button className="button small" onClick={() => setCreating(true)}>Create an opportunity <FiArrowRight /></button></section>

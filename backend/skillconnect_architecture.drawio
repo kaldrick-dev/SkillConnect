@@ -1,0 +1,140 @@
+<mxfile host="app.diagrams.net" agent="Claude Code" version="24.0.0" type="device">
+  <diagram id="skillconnect-arch" name="SkillConnect Architecture">
+    <mxGraphModel dx="1200" dy="1600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="920" pageHeight="1900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="SkillConnect — System Architecture" style="text;html=1;align=center;verticalAlign=middle;fontSize=22;fontStyle=1;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="40" y="15" width="840" height="36" as="geometry" />
+        </mxCell>
+
+        <!-- Actors -->
+        <mxCell id="actors" value="Users&#10;Student · Employer · Mentor · Admin" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;fontStyle=1;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="260" y="66" width="400" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="a0" style="endArrow=block;html=1;strokeColor=#666666;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="actors" target="l1bg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============ LAYER 1: PRESENTATION ============ -->
+        <mxCell id="l1bg" value="PRESENTATION LAYER&#10;React 19 + Vite SPA (frontend/)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;align=left;spacingLeft=14;spacingTop=8;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="140" width="840" height="340" as="geometry" />
+        </mxCell>
+        <mxCell id="l1b1" value="Public Pages&#10;Landing · Login · Register" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;arcSize=10;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="70" y="190" width="380" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="l1b2" value="Dashboard &amp; Explore&#10;Role-based home, opportunity feed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;arcSize=10;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="470" y="190" width="380" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="l1b3" value="Directory &amp; Profiles&#10;Directory · StudentProfile" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;arcSize=10;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="70" y="285" width="380" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="l1b4" value="Workspace&#10;Tasks, submissions, mentor feedback" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;arcSize=10;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="470" y="285" width="380" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="l1b5" value="Admin Panel&#10;User management &amp; reactivation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;arcSize=10;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="70" y="380" width="380" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="l1b6" value="Shared Layer&#10;AuthContext · PageLoader · API client (axios)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;arcSize=10;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="470" y="380" width="380" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow L1 -> L2 -->
+        <mxCell id="a1" value="HTTPS · REST/JSON&#10;Authorization: Bearer &lt;JWT&gt;" style="endArrow=block;html=1;strokeColor=#666666;fontSize=11;fontStyle=2;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="l1bg" target="l2bg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============ LAYER 2: API ============ -->
+        <mxCell id="l2bg" value="API LAYER&#10;Flask REST Blueprints (/api/*), JWT-protected" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;verticalAlign=top;align=left;spacingLeft=14;spacingTop=8;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="530" width="840" height="530" as="geometry" />
+        </mxCell>
+        <mxCell id="l2b1" value="Auth&#10;/api/auth — register · login · refresh" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;arcSize=10;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="70" y="580" width="380" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="l2b2" value="Students&#10;/api/students" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;arcSize=10;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="470" y="580" width="380" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="l2b3" value="Mentors&#10;/api/mentors" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;arcSize=10;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="70" y="675" width="380" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="l2b4" value="Employers&#10;/api/employers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;arcSize=10;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="470" y="675" width="380" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="l2b5" value="Internships&#10;/api — listings &amp; applications" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;arcSize=10;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="70" y="770" width="380" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="l2b6" value="Tasks&#10;/api — internship tasks" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;arcSize=10;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="470" y="770" width="380" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="l2b7" value="Submissions&#10;/api/submissions — review &amp; grade" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;arcSize=10;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="70" y="865" width="380" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="l2b8" value="Certificates&#10;/api/certificates — issue &amp; verify" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;arcSize=10;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="470" y="865" width="380" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="l2b9" value="Admin&#10;/api/admin — user &amp; account mgmt" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;arcSize=10;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="70" y="960" width="380" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="l2b10" value="Docs&#10;/api — OpenAPI / Swagger UI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;arcSize=10;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="470" y="960" width="380" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow L2 -> L3 -->
+        <mxCell id="a2" value="Function calls / ORM queries" style="endArrow=block;html=1;strokeColor=#666666;fontSize=11;fontStyle=2;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="l2bg" target="l3bg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============ LAYER 3: DOMAIN ============ -->
+        <mxCell id="l3bg" value="DOMAIN LAYER&#10;Business Models &amp; Access Control (app/models, app/utils)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;verticalAlign=top;align=left;spacingLeft=14;spacingTop=8;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1110" width="840" height="340" as="geometry" />
+        </mxCell>
+        <mxCell id="l3b1" value="User&#10;roles: student · employer · mentor · admin" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;arcSize=10;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="70" y="1160" width="380" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="l3b2" value="Student / Mentor / Employer&#10;role profile models" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;arcSize=10;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="470" y="1160" width="380" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="l3b3" value="Internship &amp; Application&#10;postings, applications, status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;arcSize=10;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="70" y="1255" width="380" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="l3b4" value="Task &amp; Submission&#10;assigned work, deliverables" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;arcSize=10;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="470" y="1255" width="380" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="l3b5" value="Assessment &amp; Certificate&#10;grading, credential issuance" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;arcSize=10;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="70" y="1350" width="380" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="l3b6" value="Access Control&#10;utils/auth.py — role_required decorators, JWT identity" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;arcSize=10;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="470" y="1350" width="380" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow L3 -> L4 -->
+        <mxCell id="a3" value="SQLAlchemy sessions&#10;Alembic migrations" style="endArrow=block;html=1;strokeColor=#666666;fontSize=11;fontStyle=2;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="l3bg" target="l4bg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============ LAYER 4: INFRASTRUCTURE ============ -->
+        <mxCell id="l4bg" value="INFRASTRUCTURE LAYER" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;verticalAlign=top;align=left;spacingLeft=14;spacingTop=8;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1500" width="840" height="340" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b1" value="SQLAlchemy ORM" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;arcSize=10;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="70" y="1550" width="380" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b2" value="Flask-Migrate / Alembic&#10;schema migrations" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;arcSize=10;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="470" y="1550" width="380" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b3" value="Flask-JWT-Extended&#10;token issuing &amp; validation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;arcSize=10;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="70" y="1645" width="380" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b4" value="Flask-CORS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;arcSize=10;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="470" y="1645" width="380" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="l4b5" value="Database&#10;PostgreSQL (prod) / SQLite (dev, test)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;arcSize=10;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="70" y="1740" width="780" height="80" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

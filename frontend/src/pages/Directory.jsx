@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { FiBriefcase, FiChevronDown, FiChevronUp, FiExternalLink, FiGlobe, FiMail, FiSearch, FiUsers } from "react-icons/fi";
 import { employersApi, mentorsApi } from "../api/client";
+import PageLoader from "../components/PageLoader";
 
 export default function Directory() {
   const [tab, setTab] = useState("mentors");
@@ -36,7 +37,7 @@ function MentorDirectory() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="card-skeletons"><i /><i /><i /></div>;
+  if (loading) return <PageLoader label="Loading mentors…" />;
   if (message) return <div className="project-note">{message}</div>;
 
   const filtered = mentors.filter((mentor) => `${mentor.email} ${mentor.expertise}`.toLowerCase().includes(query.toLowerCase()));
@@ -94,7 +95,7 @@ function CompanyDirectory() {
     }
   };
 
-  if (loading) return <div className="card-skeletons"><i /><i /><i /></div>;
+  if (loading) return <PageLoader label="Loading companies…" />;
   if (message) return <div className="project-note">{message}</div>;
 
   const filtered = companies.filter((company) => `${company.profile?.company_name || ""} ${company.email}`.toLowerCase().includes(query.toLowerCase()));

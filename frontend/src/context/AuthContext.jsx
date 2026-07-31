@@ -39,9 +39,11 @@ export function AuthProvider({ children }) {
   };
 
   const updateUser = (next) => {
-    const merged = { ...user, ...next };
-    localStorage.setItem("skillconnect_user", JSON.stringify(merged));
-    setUser(merged);
+    setUser((current) => {
+      const merged = { ...current, ...next };
+      localStorage.setItem("skillconnect_user", JSON.stringify(merged));
+      return merged;
+    });
   };
 
   const value = useMemo(
