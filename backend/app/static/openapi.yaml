@@ -674,6 +674,28 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /api/admin/users/{user_id}/reactivate:
+    patch:
+      tags: [Admin]
+      summary: Reactivate a user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User reactivated
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   /api/admin/stats:
     get:
       tags: [Admin]

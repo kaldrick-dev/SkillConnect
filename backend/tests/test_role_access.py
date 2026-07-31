@@ -44,6 +44,7 @@ def authorization_header(app, role):
         ("GET", "/api/certificates/student/1", "employer"),
         ("GET", "/api/admin/users", "student"),
         ("DELETE", "/api/admin/users/1", "employer"),
+        ("PATCH", "/api/admin/users/1/reactivate", "employer"),
         ("GET", "/api/admin/stats", "mentor"),
     ],
 )

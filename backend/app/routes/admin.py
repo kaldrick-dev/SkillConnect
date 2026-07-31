@@ -19,9 +19,17 @@ def list_users():
 def deactivate_user(user_id):
     user = User.query.get_or_404(user_id)
     user.is_active = False
-    from app.extensions import db
     db.session.commit()
     return jsonify({"message": "user deactivated"}), 200
+
+
+@admin_bp.patch("/users/<int:user_id>/reactivate")
+@role_required("admin")
+def reactivate_user(user_id):
+    user = User.query.get_or_404(user_id)
+    user.is_active = True
+    db.session.commit()
+    return jsonify({"message": "user reactivated", "user": user.to_dict()}), 200
 
 
 @admin_bp.get("/stats")
