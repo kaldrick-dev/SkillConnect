@@ -112,6 +112,7 @@
 .task-row.locked .task-submit .secondary-button { border-color: #dfe3dd; background: #f2f4f1; color: #8f9793; cursor: default; }
 .workspace-loading { min-height: 280px; display: grid; place-items: center; align-content: center; gap: 12px; color: var(--muted); font-size: 10px; }
 .workspace-loading span { width: 26px; height: 26px; border: 3px solid #dce2dc; border-top-color: var(--blue); border-radius: 50%; animation: spin .7s linear infinite; }
+.workspace-loading.compact { min-height: 150px; border: 0; box-shadow: none; }
 .text-stat { font-size: 13px !important; }
 .admin-table-card { overflow: hidden; box-shadow: 0 12px 35px rgba(30,45,37,.045); }
 .admin-table-card > .table-heading { padding: 24px 26px 18px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
@@ -149,6 +150,8 @@
 .date-cell { color: #5f6964; white-space: nowrap; }
 .table-action { min-height: 31px; padding: 0 10px; border: 1px solid #e4cbc7; border-radius: 7px; background: #fff9f8; color: #9b3428; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 8px; font-weight: 700; white-space: nowrap; }
 .table-action:hover:not(:disabled) { border-color: #dba9a1; background: #fff0ed; }
+.table-action.reactivate { border-color: #b9ddca; background: #f2fbf6; color: var(--green); }
+.table-action.reactivate:hover:not(:disabled) { border-color: #8fc8aa; background: var(--green-soft); }
 .table-action:disabled { border-color: transparent; background: #f4f5f3; color: #9ba29e; cursor: default; }
 .empty-table-row:hover { background: white !important; }
 .empty-table-row td { height: 190px; color: var(--muted); text-align: center; }

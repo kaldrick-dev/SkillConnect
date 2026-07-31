@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { FiBriefcase, FiGlobe, FiMail, FiMapPin, FiSearch, FiX } from "react-icons/fi";
 import { employersApi, internshipsApi } from "../api/client";
 import OpportunityCard from "../components/OpportunityCard";
+import PageLoader from "../components/PageLoader";
 import { useAuth } from "../context/AuthContext";
 
 export default function Explore() {
@@ -86,7 +87,7 @@ export default function Explore() {
       {company && (
         <div className="modal-backdrop" role="presentation" onMouseDown={() => setCompany(null)}>
           <div className="create-modal" onMouseDown={(event) => event.stopPropagation()}>
-            {company.loading ? <p>Loading company profile…</p> : (
+            {company.loading ? <PageLoader compact label="Loading company profile…" /> : (
               <>
                 <span className="eyebrow">Company profile</span>
                 <h2>{company.employer?.profile?.company_name || "Company"}</h2>

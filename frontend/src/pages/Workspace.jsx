@@ -20,6 +20,7 @@ import {
   tasksApi,
 } from "../api/client";
 import { useAuth } from "../context/AuthContext";
+import PageLoader from "../components/PageLoader";
 
 const formatDate = (value) => value
   ? new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(value))
@@ -104,7 +105,7 @@ function StudentWorkspace({ user }) {
     }
   };
 
-  if (loading) return <LoadingPanel label="Loading your projects…" />;
+  if (loading) return <PageLoader label="Loading your projects…" />;
 
   return (
     <div className="workspace-stack">
@@ -248,14 +249,18 @@ function EmployerWorkspace({ user }) {
   const [editForm, setEditForm] = useState({ title: "", description: "", location: "" });
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [loadingInternships, setLoadingInternships] = useState(true);
+  const [loadingProject, setLoadingProject] = useState(false);
 
   useEffect(() => {
     employersApi.internships(user.id)
       .then((data) => {
         setInternships(data);
         setSelectedId((current) => current || data[0]?.id || null);
+        setLoadingProject(Boolean(data[0]));
       })
-      .catch((error) => setMessage(error.message));
+      .catch((error) => setMessage(error.message))
+      .finally(() => setLoadingInternships(false));
   }, [user.id]);
 
   const selected = useMemo(
@@ -274,6 +279,7 @@ function EmployerWorkspace({ user }) {
 
   const loadProject = async () => {
     if (!selectedId) return;
+    setLoadingProject(true);
     try {
       const data = await internshipsApi.workspace(selectedId);
       setTasks(data.tasks);
@@ -283,6 +289,8 @@ function EmployerWorkspace({ user }) {
       ));
     } catch (error) {
       setMessage(error.message);
+    } finally {
+      setLoadingProject(false);
     }
   };
 
@@ -398,13 +406,19 @@ function EmployerWorkspace({ user }) {
         <div><span className="eyebrow">Delivery workspace</span><h2>Manage projects and talent.</h2><p>Turn each published opportunity into structured tasks, decisions, and reviewed outcomes.</p></div>
       </section>
       {message && <Notice message={message} onClose={() => setMessage("")} />}
-      {!internships.length ? (
+      {loadingInternships || loadingProject ? (
+        <PageLoader label={loadingInternships ? "Loading your opportunities…" : "Loading project details…"} />
+      ) : !internships.length ? (
         <EmptyState icon={<FiBookOpen />} title="Publish an opportunity first" copy="Create an opportunity from Overview, then return here to add tasks and manage applicants." />
       ) : (
         <>
           <div className="project-tabs" role="tablist">
             {internships.map((internship) => (
-              <button key={internship.id} className={selectedId === internship.id ? "active" : ""} onClick={() => setSelectedId(internship.id)}>
+              <button key={internship.id} className={selectedId === internship.id ? "active" : ""} onClick={() => {
+                if (selectedId === internship.id) return;
+                setLoadingProject(true);
+                setSelectedId(internship.id);
+              }}>
                 {internship.title}<small>{internship.is_active ? "Live" : "Closed"}</small>
               </button>
             ))}
@@ -513,14 +527,18 @@ function ReviewWorkspace() {
   const [busy, setBusy] = useState(false);
   const [candidates, setCandidates] = useState([]);
   const [showCandidates, setShowCandidates] = useState(false);
+  const [loadingInternships, setLoadingInternships] = useState(true);
+  const [loadingProject, setLoadingProject] = useState(false);
 
   useEffect(() => {
     internshipsApi.list()
       .then((data) => {
         setInternships(data);
         setSelectedId(data[0]?.id || null);
+        setLoadingProject(Boolean(data[0]));
       })
-      .catch((error) => setMessage(error.message));
+      .catch((error) => setMessage(error.message))
+      .finally(() => setLoadingInternships(false));
   }, []);
 
   useEffect(() => {
@@ -532,6 +550,7 @@ function ReviewWorkspace() {
 
   useEffect(() => {
     if (!selectedId) return;
+    setLoadingProject(true);
     internshipsApi.workspace(selectedId)
       .then((data) => {
         setApplications(data.applications);
@@ -540,7 +559,8 @@ function ReviewWorkspace() {
           data.tasks.map((task) => [task.id, task.submissions || []]),
         ));
       })
-      .catch((error) => setMessage(error.message));
+      .catch((error) => setMessage(error.message))
+      .finally(() => setLoadingProject(false));
   }, [selectedId]);
 
   const saveReview = async (submission) => {
@@ -596,8 +616,16 @@ function ReviewWorkspace() {
     <div className="workspace-stack">
       <section className="workspace-hero"><div><span className="eyebrow">Mentor review</span><h2>Turn project work into useful feedback.</h2><p>Review participants across opportunities and record their final assessment.</p></div></section>
       {message && <Notice message={message} onClose={() => setMessage("")} />}
+      {loadingInternships || loadingProject ? (
+        <PageLoader label={loadingInternships ? "Loading opportunities…" : "Loading review workspace…"} />
+      ) : (
+      <>
       <div className="project-tabs">
-        {internships.map((internship) => <button key={internship.id} className={selectedId === internship.id ? "active" : ""} onClick={() => setSelectedId(internship.id)}>{internship.title}<small>{internship.company_name}</small></button>)}
+        {internships.map((internship) => <button key={internship.id} className={selectedId === internship.id ? "active" : ""} onClick={() => {
+          if (selectedId === internship.id) return;
+          setLoadingProject(true);
+          setSelectedId(internship.id);
+        }}>{internship.title}<small>{internship.company_name}</small></button>)}
       </div>
       {!!candidates.length && (
         <section className="panel workspace-card">
@@ -673,12 +701,10 @@ function ReviewWorkspace() {
           </article>
         )) : <div className="project-note">This opportunity has no tasks yet.</div>}
       </section>
+      </>
+      )}
     </div>
   );
-}
-
-function LoadingPanel({ label }) {
-  return <div className="panel workspace-loading"><span /><p>{label}</p></div>;
 }
 
 function EmptyState({ icon, title, copy }) {

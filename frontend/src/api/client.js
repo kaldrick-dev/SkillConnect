@@ -9,14 +9,19 @@ export class ApiError extends Error {
 
 export async function api(path, options = {}) {
   const token = localStorage.getItem("skillconnect_token");
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-  });
+  let response;
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers,
+      },
+    });
+  } catch {
+    throw new ApiError("The API is unavailable. Make sure the backend is running and try again.", 0);
+  }
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
@@ -24,7 +29,12 @@ export async function api(path, options = {}) {
       localStorage.removeItem("skillconnect_token");
       localStorage.removeItem("skillconnect_user");
     }
-    throw new ApiError(data.error || "Something went wrong. Please try again.", response.status);
+    const fallbackMessage = response.status === 404 || response.status === 405
+      ? "This action is not available on the running API. Restart or redeploy the backend and try again."
+      : response.status >= 500
+        ? "The API could not complete the request. Please try again."
+        : `Request failed (${response.status}). Please try again.`;
+    throw new ApiError(data.error || data.message || fallbackMessage, response.status);
   }
   return data;
 }
@@ -128,5 +138,8 @@ export const adminApi = {
   users: () => api("/admin/users"),
   deactivate: (userId) => api(`/admin/users/${userId}`, {
     method: "DELETE",
+  }),
+  reactivate: (userId) => api(`/admin/users/${userId}/reactivate`, {
+    method: "PATCH",
   }),
 };
